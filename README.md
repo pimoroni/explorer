@@ -32,7 +32,7 @@ There are two choices of firmware:
 1. Connect Explorer to your computer with a USB Type-C cable
 2. Put your Explorer into bootloader mode by holding down "BOOT", the second button from the left when holding Explorer with the screen facing away from you. Keep holding "BOOT" and press "RESET", the button next to "BOOT".
 3. Drag and drop your chosen `.uf2` file onto the `RP2350` drive that appears.
-4. Your board should reset and, if you used the `with-filesystem build, should display a menu of examples.
+4. Your board should reset and, if you used the `with-filesystem` build, should display a menu of examples.
 
 # Examples
 
