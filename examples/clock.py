@@ -124,7 +124,7 @@ while True:
         vector.set_font_size(53)
         vector.text(f"{hour:02}{c}{minute:02}{c}{second:02}", 17, 100)
         vector.set_font_size(28)
-        text = f"{days[wd]} {months[month]} {day:02}"
+        text = f"{days[wd]} {months[month-1]} {day:02}"
         text = f"{text:30}"
         offset = int(time.ticks_ms() / 200) % len(text)
         vector.text((text[offset:] + text[:offset])[:15], 17, 140)
