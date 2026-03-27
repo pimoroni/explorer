@@ -3,21 +3,24 @@ import random
 import time
 from collections import namedtuple
 
-from explorer import display, BLACK, WHITE, GREEN, RED, button_a, button_b, button_c, button_z, button_x
+from explorer import BLACK, GREEN, RED, WHITE, display, i2c
+from qwstpad import ADDRESSES, QwSTPad
 
 """
-Navigate a set of mazes from the start (red) to the goal (green).
+A single player QwSTPad game demo. Navigate a set of mazes from the start (red) to the goal (green).
 Mazes get bigger / harder with each increase in level.
+Makes use of 1 QwSTPad and a Pimoroni Explorer
 
 Controls:
-* A = Move Forward
-* B = Move Backward
-* Z = Move Right
-* C = Move left
-* X = Continue (once the current level is complete)
+* U = Move Forward
+* D = Move Backward
+* R = Move Right
+* L = Move left
+* + = Continue (once the current level is complete)
 """
 
 # General Constants
+I2C_ADDRESS = ADDRESSES[0]                  # The I2C address of the connected QwSTPad
 BRIGHTNESS = 1.0                            # The brightness of the LCD backlight (from 0.0 to 1.0)
 
 # Colour Constants (RGB565)
@@ -38,6 +41,7 @@ TEXT_SHADOW = 2
 MOVEMENT_SLEEP = 0.1
 DIFFICULT_SCALE = 0.5
 
+# Variables
 complete = False                                # Has the game been completed?
 level = 0                                       # The current "level" the player is on (affects difficulty)
 
@@ -195,31 +199,33 @@ class MazeBuilder:
 
 
 class Player(object):
-    def __init__(self, x, y, colour):
+    def __init__(self, x, y, colour, pad):
         self.x = x
         self.y = y
         self.colour = colour
+        self.pad = pad
 
     def position(self, x, y):
         self.x = x
         self.y = y
 
     def update(self, maze):
-        # Read the player's input
+        # Read the player's gamepad
+        button = self.pad.read_buttons()
 
-        if button_c.value() == 0 and maze[self.y][self.x - 1] != 1:
+        if button['L'] and maze[self.y][self.x - 1] != 1:
             self.x -= 1
             time.sleep(MOVEMENT_SLEEP)
 
-        elif button_z.value() == 0 and maze[self.y][self.x + 1] != 1:
+        elif button['R'] and maze[self.y][self.x + 1] != 1:
             self.x += 1
             time.sleep(MOVEMENT_SLEEP)
 
-        elif button_a.value() == 0 and maze[self.y - 1][self.x] != 1:
+        elif button['U'] and maze[self.y - 1][self.x] != 1:
             self.y -= 1
             time.sleep(MOVEMENT_SLEEP)
 
-        elif button_b.value() == 0 and maze[self.y + 1][self.x] != 1:
+        elif button['D'] and maze[self.y + 1][self.x] != 1:
             self.y += 1
             time.sleep(MOVEMENT_SLEEP)
 
@@ -256,78 +262,97 @@ def build_maze():
     goal = Position(builder.grid_columns - 2, 1)
 
 
-# Create the maze builder and build the first maze
+# Create the maze builder and build the first maze and put
 builder = MazeBuilder()
 build_maze()
 
-# Create the player object
-player = Player(*start, PLAYER)
+# Create the player object if a QwSTPad is connected
+try:
+    player = Player(*start, PLAYER, QwSTPad(i2c, I2C_ADDRESS))
+except OSError:
+    print("QwSTPad: Not Connected ... Exiting")
+    raise SystemExit
+
+print("QwSTPad: Connected ... Starting")
 
 # Turn on the display
 display.set_backlight(BRIGHTNESS)
 
-# Loop forever
-while True:
-    if not complete:
-        # Update the player's position in the maze
-        player.update(builder.maze)
+# Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
+try:
+    # Loop forever
+    while True:
+        if not complete:
+            # Update the player's position in the maze
+            player.update(builder.maze)
 
-        # Check if any player has reached the goal position
-        if player.x == goal.x and player.y == goal.y:
-            complete = True
-    else:
-        # Check for the player wanting to continue
-        if button_x.value() == 0:
-            complete = False
-            level += 1
-            build_maze()
-            player.position(*start)
+            # Check if any player has reached the goal position
+            if player.x == goal.x and player.y == goal.y:
+                complete = True
+        else:
+            # Check for the player wanting to continue
+            if player.pad.read_buttons()['+']:
+                complete = False
+                level += 1
+                build_maze()
+                player.position(*start)
 
-    # Clear the screen to the background colour
-    display.set_pen(BACKGROUND)
-    display.clear()
+        # Clear the screen to the background colour
+        display.set_pen(BACKGROUND)
+        display.clear()
 
-    # Draw the maze walls
-    builder.draw(display)
+        # Draw the maze walls
+        builder.draw(display)
 
-    # Draw the start location square
-    display.set_pen(RED)
-    display.rectangle(start.x * wall_separation + offset_x,
-                      start.y * wall_separation + offset_y,
-                      wall_size, wall_size)
+        # Draw the start location square
+        display.set_pen(RED)
+        display.rectangle(start.x * wall_separation + offset_x,
+                          start.y * wall_separation + offset_y,
+                          wall_size, wall_size)
 
-    # Draw the goal location square
-    display.set_pen(GREEN)
-    display.rectangle(goal.x * wall_separation + offset_x,
-                      goal.y * wall_separation + offset_y,
-                      wall_size, wall_size)
+        # Draw the goal location square
+        display.set_pen(GREEN)
+        display.rectangle(goal.x * wall_separation + offset_x,
+                          goal.y * wall_separation + offset_y,
+                          wall_size, wall_size)
 
-    # Draw the player
-    player.draw(display)
+        # Draw the player
+        player.draw(display)
 
-    # Display the level
-    display.set_pen(BLACK)
-    display.text(f"Lvl: {level}", 2 + TEXT_SHADOW, 2 + TEXT_SHADOW, WIDTH, 1)
-    display.set_pen(WHITE)
-    display.text(f"Lvl: {level}", 2, 2, WIDTH, 1)
-
-    if complete:
-        # Draw banner shadow
+        # Display the level
         display.set_pen(BLACK)
-        display.rectangle(4, 94, WIDTH, 50)
-        # Draw banner
-        display.set_pen(PLAYER)
-        display.rectangle(0, 90, WIDTH, 50)
-
-        # Draw text shadow
-        display.set_pen(BLACK)
-        display.text("Maze Complete!", WIDTH // 6 + TEXT_SHADOW, 96 + TEXT_SHADOW, WIDTH, 3)
-        display.text("Press X to continue", WIDTH // 6 + 10 + TEXT_SHADOW, 120 + TEXT_SHADOW, WIDTH, 2)
-
-        # Draw text
+        display.text(f"Lvl: {level}", 2 + TEXT_SHADOW, 2 + TEXT_SHADOW, WIDTH, 1)
         display.set_pen(WHITE)
-        display.text("Maze Complete!", WIDTH // 6, 96, WIDTH, 3)
-        display.text("Press X to continue", WIDTH // 6 + 10, 120, WIDTH, 2)
+        display.text(f"Lvl: {level}", 2, 2, WIDTH, 1)
 
-    # Update the screen
-    display.update()
+        if complete:
+            # Draw banner shadow
+            display.set_pen(BLACK)
+            display.rectangle(4, 94, WIDTH, 50)
+            # Draw banner
+            display.set_pen(PLAYER)
+            display.rectangle(0, 90, WIDTH, 50)
+
+            # Draw text shadow
+            display.set_pen(BLACK)
+            display.text("Maze Complete!", WIDTH // 6 + TEXT_SHADOW, 96 + TEXT_SHADOW, WIDTH, 3)
+            display.text("Press + to continue", WIDTH // 6 + 10 + TEXT_SHADOW, 120 + TEXT_SHADOW, WIDTH, 2)
+
+            # Draw text
+            display.set_pen(WHITE)
+            display.text("Maze Complete!", WIDTH // 6, 96, WIDTH, 3)
+            display.text("Press + to continue", WIDTH // 6 + 10, 120, WIDTH, 2)
+
+        # Update the screen
+        display.update()
+
+# Handle the QwSTPad being disconnected unexpectedly
+except OSError:
+    print("QwSTPad: Disconnected .. Exiting")
+
+# Turn off the LEDs of the connected QwSTPad
+finally:
+    try:
+        player.pad.clear_leds()
+    except OSError:
+        pass
