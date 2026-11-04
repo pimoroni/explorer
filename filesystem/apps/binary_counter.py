@@ -28,6 +28,9 @@ BULB_COLOURS = (
 )
 
 VALUES = (16, 8, 4, 2, 1)
+BULB_Y = 158
+DIGIT_SIZE = 20
+CAP_CENTRE = 0.64
 AUTO_MS = 800
 
 LED_RGB = ((235, 60, 50), (255, 190, 40), (60, 200, 90), (70, 120, 255), (239, 235, 227))
@@ -90,10 +93,12 @@ while True:
     for index, (value, on, pen) in enumerate(zip(VALUES, bits, BULB_COLOURS)):
         x = 64 + index * 48
         screen.pen = pen if on else FAINT
-        screen.shape(shape.circle(x, 158, 18))
+        screen.shape(shape.circle(x, BULB_Y, 18))
         screen.font = TITLE_FONT
         screen.pen = INK if on else DIM
-        screen.text("1" if on else "0", rect(x - 18, 146, 36, 24), 20, align=(image.CENTER, image.MIDDLE))
+        digit = "1" if on else "0"
+        digit_width = screen.measure_text(digit, font_size=DIGIT_SIZE)[0]
+        screen.text(digit, x - digit_width / 2, BULB_Y - DIGIT_SIZE * CAP_CENTRE, DIGIT_SIZE)
         screen.font = BODY_FONT
         screen.pen = DIM
         screen.text(str(value), rect(x - 20, 182, 40, 22), 18, align=(image.CENTER, image.MIDDLE))
