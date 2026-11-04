@@ -9,7 +9,7 @@ You will need:
 Icon: sports_score
 """
 import explorer
-from explorer import DOWN, GP0, GP1, GP2, GP3, GP4, GP5, SELECT, UP, Input, Output, screen
+from explorer import BACK, GP0, GP1, GP2, GP3, GP4, GP5, SELECT, Input, Output, button_y, labels, screen
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -41,14 +41,14 @@ while True:
                 explorer.beep(PLAYERS[player][2], 400)
                 break
     else:
-        if UP.pressed:
+        if SELECT.pressed:
             scores[winner] += 1
             explorer.beep(880, 120)
             winner = None
-        elif DOWN.pressed:
+        elif BACK.pressed:
             explorer.beep(196, 200)
             winner = None
-    if SELECT.pressed:
+    if button_y.pressed:
         scores = [0, 0, 0]
         winner = None
 
@@ -61,27 +61,33 @@ while True:
     screen.font = TITLE_FONT
     if winner is None:
         screen.pen = PAPER
-        screen.text("Buzzers ready", rect(0, 40, 320, 60), 32, align=(image.CENTER, image.MIDDLE))
+        screen.text("Buzzers ready", rect(0, 60, 320, 44), 32, align=(image.CENTER, image.MIDDLE))
     else:
         screen.pen = INK
-        screen.text(PLAYERS[winner][0], rect(0, 40, 320, 60), 40, align=(image.CENTER, image.MIDDLE))
-        screen.font = BODY_FONT
-        screen.text("X  Correct    Y  Wrong", rect(0, 96, 320, 24), 16, align=(image.CENTER, image.MIDDLE))
+        screen.text(PLAYERS[winner][0], rect(0, 54, 320, 56), 40, align=(image.CENTER, image.MIDDLE))
 
     for player, ((name, pen, _), score) in enumerate(zip(PLAYERS, scores)):
         x = 16 + player * 100
         screen.pen = FAINT if winner is None else INK
-        screen.shape(shape.rounded_rectangle(x, 136, 88, 64, 12))
+        screen.shape(shape.rounded_rectangle(x, 140, 88, 66, 12))
         screen.pen = pen
-        screen.shape(shape.circle(x + 16, 152, 6))
+        screen.shape(shape.circle(x + 13, 156, 5))
         screen.font = BODY_FONT
         screen.pen = PAPER
-        screen.text(name, x + 28, 143, 13)
+        screen.text(name, x + 23, 147, 14)
         screen.font = TITLE_FONT
-        screen.text(str(score), rect(x, 162, 88, 34), 28, align=(image.CENTER, image.MIDDLE))
+        screen.text(str(score), rect(x, 168, 88, 36), 30, align=(image.CENTER, image.MIDDLE))
 
     screen.font = BODY_FONT
     screen.pen = DIM if winner is None else INK
-    screen.text("A  Reset scores    Switches GP3-GP5  LEDs GP0-GP2", 12, 220, 12)
+    screen.text("Switches GP3-GP5  LEDs GP0-GP2", rect(0, 210, 320, 30), 14, align=(image.CENTER, image.MIDDLE))
+
+    actions = {}
+    if winner is not None:
+        actions["A"] = "Correct"
+        actions["B"] = "Wrong"
+    if winner is not None or any(scores):
+        actions["Y"] = "Reset"
+    labels.draw(screen, TITLE_FONT, actions)
 
     explorer.update()

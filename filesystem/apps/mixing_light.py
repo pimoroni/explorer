@@ -9,7 +9,7 @@ You will need:
 Icon: join
 """
 import explorer
-from explorer import GP0, GP1, GP2, GP3, GP4, GP5, SELECT, Output, button_x, button_y, button_z, screen
+from explorer import GP0, GP1, GP2, GP3, GP4, GP5, SELECT, Output, button_x, button_y, button_z, labels, screen
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -23,9 +23,9 @@ DIM = color.rgb(125, 120, 112)
 FAINT = color.rgb(58, 56, 53)
 
 PRIMARIES = (
-    ("Red", (255, 0, 0), button_x, 45),
-    ("Green", (0, 255, 0), button_y, 119),
-    ("Blue", (0, 0, 255), button_z, 191),
+    ("Red", (255, 0, 0), button_x, "X", 45),
+    ("Green", (0, 255, 0), button_y, "Y", 119),
+    ("Blue", (0, 0, 255), button_z, "Z", 191),
 )
 
 NAMES = {
@@ -50,7 +50,7 @@ demo_started = 0
 
 while True:
     now = explorer.ticks()
-    for channel, (_, _, button, _) in enumerate(PRIMARIES):
+    for channel, (_, _, button, _, _) in enumerate(PRIMARIES):
         if button.pressed:
             mix[channel] = 1 - mix[channel]
             demo = False
@@ -82,18 +82,17 @@ while True:
     screen.pen = PAPER
     screen.text(NAMES[tuple(mix)], rect(10, 190, 200, 30), 24, align=(image.CENTER, image.MIDDLE))
 
-    for (name, (pr, pg, pb), _, y), on in zip(PRIMARIES, mix):
+    actions = {"A": "Stop" if demo else "Demo"}
+    for (name, (pr, pg, pb), _, letter, y), on in zip(PRIMARIES, mix):
         screen.pen = color.rgb(pr, pg, pb) if on else FAINT
-        screen.shape(shape.circle(286, y, 18))
-        screen.font = BODY_FONT
-        screen.pen = PAPER if on else DIM
-        width = screen.measure_text(name, font_size=16)[0]
-        screen.text(name, 258 - width, y - 11, 16)
+        screen.shape(shape.circle(234, y, 18))
+        actions[letter] = name
 
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("A  Demo" if not demo else "A  Stop", 12, 10, 14)
-    screen.text("+", 238, 72, 16)
-    screen.text("+", 238, 146, 16)
+    screen.text("+", rect(222, 70, 24, 24), 20, align=(image.CENTER, image.MIDDLE))
+    screen.text("+", rect(222, 143, 24, 24), 20, align=(image.CENTER, image.MIDDLE))
+
+    labels.draw(screen, TITLE_FONT, actions, None if demo else "A")
 
     explorer.update()

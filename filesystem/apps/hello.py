@@ -5,7 +5,11 @@ Icon: waving_hand
 """
 import explorer
 from explorer import screen
-from picovector import color, shape
+from picovector import color, font, image, rect, shape
+
+screen.antialias = image.X2
+
+TITLE_FONT = font.load("/rom/fonts/manrope-800.af")
 
 colours = [color.rgb(226, 83, 29), color.rgb(52, 199, 89), color.rgb(47, 123, 255)]
 
@@ -21,7 +25,8 @@ while True:
         y = 140 + int(30 * ((t * 2 + index) % 2 - 1) ** 2)
         screen.shape(shape.circle(x, y, 30))
 
+    screen.font = TITLE_FONT
     screen.pen = color.rgb(255, 255, 255)
-    screen.text("Hello, Explorer!", 90, 40)
+    screen.text("Hello, Explorer!", rect(0, 30, 320, 44), 32, align=(image.CENTER, image.MIDDLE))
 
     explorer.update()

@@ -35,7 +35,7 @@ FORECASTS = (
 )
 SAMPLE_MS = 60000
 HISTORY = 120
-GRAPH = (16, 150, 288, 56)
+GRAPH = (16, 158, 288, 52)
 READ_MS = 1000
 
 
@@ -45,13 +45,13 @@ next_sample = explorer.ticks()
 
 def card(x, label, value):
     screen.pen = FAINT
-    screen.shape(shape.rounded_rectangle(x, 76, 92, 60, 10))
+    screen.shape(shape.rounded_rectangle(x, 80, 92, 64, 10))
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text(label, x + 10, 82, 12)
+    screen.text(label, x + 9, 86, 14)
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(value, x + 10, 100, 20)
+    screen.text(value, x + 9, 108, 20)
 
 
 temperature, pressure, humidity = bme.read()
@@ -79,10 +79,10 @@ while True:
 
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(forecast, 16, 12, 36)
+    screen.text(forecast, 16, 10, 40)
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text(f"Pressure {trend}" if trend else "Watching the pressure...", 16, 50, 14)
+    screen.text(f"Pressure {trend}" if trend else "Watching the pressure...", 16, 54, 17)
 
     card(16, "Temperature", f"{temperature:.1f}°C")
     card(114, "Humidity", f"{humidity:.0f}%")
@@ -102,6 +102,6 @@ while True:
         screen.shape(shape.custom(points).stroke(2, shape.PATH_OPEN | shape.JOIN_ROUND | shape.CAP_ROUND))
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("Last 2 hours", rect(x, y + height + 4, width, 16), 12, align=(image.RIGHT, image.TOP))
+    screen.text("Last 2 hours", rect(x, y + height + 6, width, 16), 14, align=(image.RIGHT, image.TOP))
 
     explorer.update()

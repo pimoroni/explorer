@@ -10,7 +10,7 @@ Icon: mode_fan
 """
 import explorer
 from breakout_bme280 import BreakoutBME280
-from explorer import DOWN, SELECT, UP, screen, wiring
+from explorer import DOWN, SELECT, UP, labels, screen, wiring
 from picovector import color, font, image, mat3, rect, shape
 from servo import CONTINUOUS
 
@@ -31,6 +31,8 @@ RAMP = 4.0
 MIN_DRIVE = 0.3
 SPIN_RATE = 2.0
 READ_MS = 1000
+FAN_X = 92
+FAN_Y = 134
 
 WIRING = (
     ("Servo on header 1. Brown wire to GND, on the right.", (wiring.servo(SERVO),)),
@@ -74,24 +76,25 @@ while True:
     screen.clear()
 
     screen.pen = FAINT
-    screen.shape(shape.circle(90, 112, 76))
+    screen.shape(shape.circle(FAN_X, FAN_Y, 72))
     screen.pen = BLADE if speed > 0 else DIM
     for blade in range(3):
-        petal = shape.ellipse(0, -36, 18, 34)
-        petal.transform = mat3().translate(90, 112).rotate(angle + blade * 120)
+        petal = shape.ellipse(0, -34, 17, 32)
+        petal.transform = mat3().translate(FAN_X, FAN_Y).rotate(angle + blade * 120)
         screen.shape(petal)
     screen.pen = PAPER
-    screen.shape(shape.circle(90, 112, 10))
+    screen.shape(shape.circle(FAN_X, FAN_Y, 10))
 
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(f"{temperature:.1f}°C", rect(180, 40, 130, 40), 30)
+    screen.text(f"{temperature:.1f}°C", rect(176, 62, 136, 40), 30)
     screen.pen = BLADE if speed > 0 else DIM
-    screen.text(f"{round(speed * 100)}%", rect(180, 82, 130, 40), 30)
+    screen.text(f"{round(speed * 100)}%", rect(176, 136, 136, 40), 30)
 
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("Always on" if always_on else f"Starts at {start_temperature:.1f}°C", rect(180, 128, 130, 40), 14)
-    screen.text("A  Always on    X Y  Start temperature", 12, 218, 14)
+    screen.text("Always on" if always_on else f"Starts at {start_temperature:.1f}°C", rect(176, 182, 136, 20), 16)
+
+    labels.draw(screen, TITLE_FONT, {"A": "Auto" if always_on else "Always on", "X": "Warmer", "Y": "Cooler"})
 
     explorer.update()

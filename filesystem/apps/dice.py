@@ -10,7 +10,7 @@ import math
 import random
 
 import explorer
-from explorer import SELECT, UP, screen
+from explorer import SELECT, UP, labels, screen
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, mat3, rect, shape
 
@@ -37,8 +37,8 @@ SPIN_FRICTION = 2.6
 REST_SPEED = 40
 SETTLE = 8
 FLIP_DEGREES = 70
-TABLE_TOP = 40
-TABLE_BOTTOM = 214
+TABLE_TOP = 62
+TABLE_BOTTOM = 206
 POP_MS = 400
 PIPS = {
     1: ((0, 0),),
@@ -224,8 +224,6 @@ while True:
         label = f"Total {total}" if len(dice) == 2 else f"You rolled {total}"
         screen.text(label, rect(0, 6, 320, 30), size, align=(image.CENTER, image.MIDDLE))
 
-    screen.font = BODY_FONT
-    screen.pen = DIM
-    screen.text("Shake or A  Roll    X  One / two dice", 10, 222, 13)
+        labels.draw(screen, TITLE_FONT, {"A": "Roll", "X": "One die" if len(dice) == 2 else "Two dice"}, "A")
 
     explorer.update()

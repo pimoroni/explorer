@@ -11,7 +11,7 @@ Icon: psychology
 import random
 
 import explorer
-from explorer import GP0, GP1, GP2, GP3, GP4, GP5, SELECT, Input, Output, button_x, button_y, button_z, screen
+from explorer import GP0, GP1, GP2, GP3, GP4, GP5, SELECT, Input, Output, button_x, button_y, button_z, labels, screen
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -24,10 +24,11 @@ PAPER = color.rgb(239, 235, 227)
 DIM = color.rgb(125, 120, 112)
 
 PADS = (
-    ((235, 60, 50), 330),
-    ((255, 190, 40), 415),
-    ((60, 200, 90), 494),
+    ((235, 60, 50), 330, "Red"),
+    ((255, 190, 40), 415, "Yellow"),
+    ((60, 200, 90), 494, "Green"),
 )
+PAD_ROWS = (45, 119, 191)
 ON_MS = 400
 OFF_MS = 200
 FLASH_MS = 250
@@ -91,13 +92,12 @@ while True:
     screen.pen = INK
     screen.clear()
 
-    for pad, ((r, g, b), _) in enumerate(PADS):
-        y = 45 + pad * 74
+    for pad, ((r, g, b), _, _) in enumerate(PADS):
         if pad == lit:
             screen.pen = color.rgb(r, g, b)
         else:
             screen.pen = color.rgb(r // 4, g // 4, b // 4)
-        screen.shape(shape.rounded_rectangle(196, y - 30, 110, 60, 14))
+        screen.shape(shape.rounded_rectangle(166, PAD_ROWS[pad] - 30, 80, 60, 14))
 
     screen.font = TITLE_FONT
     screen.pen = PAPER
@@ -109,15 +109,23 @@ while True:
         message = "Your turn"
     else:
         message = "Game over"
-    screen.text(message, rect(12, 60, 170, 40), 28)
+    screen.text(message, rect(12, 62, 150, 40), 28)
     screen.font = BODY_FONT
     screen.pen = DIM
     if state != START:
-        screen.text(f"Round {len(sequence)}", 12, 104, 16)
+        screen.text(f"Round {len(sequence)}", 12, 108, 18)
     if best:
-        screen.text(f"Best {best}", 12, 126, 16)
+        screen.text(f"Best {best}", 12, 132, 18)
+    screen.text("Switches\nGP3-5", 12, 186, 14)
+
     if state in (START, OVER):
-        screen.text("A  Start", 12, 20, 14)
-    screen.text("Switches GP3-5\nor X Y Z", 12, 184, 13)
+        actions = {"A": "Start" if state == START else "Again"}
+        highlight = "A"
+    else:
+        actions = {}
+        highlight = None
+    if state == COPYING:
+        actions["X"], actions["Y"], actions["Z"] = (name for _, _, name in PADS)
+    labels.draw(screen, TITLE_FONT, actions, highlight)
 
     explorer.update()

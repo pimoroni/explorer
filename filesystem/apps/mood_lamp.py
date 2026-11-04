@@ -11,28 +11,28 @@ Icon: table_lamp
 import math
 
 import explorer
-from explorer import ADC0, GP2, GP3, GP4, SELECT, Analog, Output, button_c, screen, wiring
+from explorer import ADC0, GP2, GP3, GP4, SELECT, UP, Analog, Output, labels, screen, wiring
 from picovector import color, font, image, shape
 
 screen.antialias = image.X2
 
+TITLE_FONT = font.load("/rom/fonts/manrope-800.af")
 BODY_FONT = font.load("/rom/fonts/manrope-600.af")
 
 INK = color.rgb(31, 29, 27)
-DIM = color.rgb(125, 120, 112)
 
 SEGMENTS = 36
 CENTRE_X = 160
-CENTRE_Y = 112
-RING_INNER = 72
-RING_OUTER = 96
+CENTRE_Y = 134
+RING_INNER = 66
+RING_OUTER = 88
 CYCLE_MS = 30000
 BREATHE_MS = 6000
 SMOOTHING = 0.08
 
 POT_STEPS = (
     (
-        "Potentiometer pins-up in columns 4, 5, 6 just above the groove, shaft over the groove",
+        "Pot pins-up in columns 4, 5, 6 above the groove, shaft over the groove",
         (wiring.potentiometer(4),),
     ),
     (
@@ -47,7 +47,7 @@ POT_STEPS = (
 RGB_LED_COLUMN = 13
 WIRING = (
     (
-        "RGB LED in the bottom half, columns 13 to 16. Longest leg (ground) second from the left.",
+        "RGB LED in columns 13 to 16, bottom half. Longest leg (ground) second.",
         (wiring.rgb_led(RGB_LED_COLUMN),),
     ),
     (
@@ -83,7 +83,7 @@ while True:
     last = now
     if SELECT.pressed:
         cycle = not cycle
-    if button_c.pressed:
+    if UP.pressed:
         breathe = not breathe
 
     if cycle:
@@ -111,10 +111,6 @@ while True:
     screen.shape(shape.circle(marker_x, marker_y, 10))
     screen.shape(shape.circle(CENTRE_X, CENTRE_Y, 52))
 
-    screen.font = BODY_FONT
-    screen.pen = DIM
-    screen.text("A  Cycle " + ("on" if cycle else "off"), 12, 10, 14)
-    screen.text("C  Breathe " + ("on" if breathe else "off"), 12, 214, 14)
-    screen.text("Dial ADC0", 240, 214, 14)
+    labels.draw(screen, TITLE_FONT, {"A": "Cycle on" if cycle else "Cycle off", "X": "Breathe on" if breathe else "Breathe off"})
 
     explorer.update()

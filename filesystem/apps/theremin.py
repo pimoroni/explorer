@@ -11,7 +11,7 @@ from array import array
 
 import explorer
 from breakout_ltr559 import BreakoutLTR559
-from explorer import SELECT, button_c, screen
+from explorer import SELECT, UP, labels, screen
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -57,7 +57,7 @@ def frequency(midi):
 while True:
     if SELECT.pressed:
         sound = not sound
-    if button_c.pressed:
+    if UP.pressed:
         snap = not snap
 
     reading = ltr.get_reading()
@@ -94,14 +94,14 @@ while True:
         name = NOTE_NAMES[round(note) % 12] + str(round(note) // 12 - 1)
         screen.font = TITLE_FONT
         screen.pen = PAPER
-        screen.text(name, 16, 12, 36)
+        screen.text(name, rect(0, 4, 320, 52), 40, align=(image.CENTER, image.MIDDLE))
         screen.font = BODY_FONT
         screen.pen = DIM
-        screen.text(f"{frequency(note):.0f} Hz", 16, 52, 14)
+        screen.text(f"{frequency(note):.0f} Hz", rect(0, 58, 320, 22), 16, align=(image.CENTER, image.MIDDLE))
     else:
         screen.font = BODY_FONT
         screen.pen = DIM
-        screen.text("Hover a finger within 3cm of the sensor", rect(0, 96, 320, 24), 16, align=(image.CENTER, image.MIDDLE))
+        screen.text("Hover a finger within 3cm of the sensor", rect(0, 106, 320, 26), 18, align=(image.CENTER, image.MIDDLE))
 
     screen.pen = FAINT
     screen.shape(shape.rounded_rectangle(16, 180, 288, 8, 4))
@@ -110,6 +110,9 @@ while True:
 
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text(f"A  Sound {'on' if sound else 'off'}    C  {'Scale' if snap else 'Slide'}", 12, 214, 14)
+    mode = "Pentatonic scale" if snap else "Smooth slide"
+    screen.text(mode if sound else f"{mode}, muted", rect(0, 206, 320, 30), 16, align=(image.CENTER, image.MIDDLE))
+
+    labels.draw(screen, TITLE_FONT, {"A": "Mute" if sound else "Unmute", "X": "Slide" if snap else "Scale"})
 
     explorer.update()

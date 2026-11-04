@@ -45,7 +45,7 @@ READY, RUNNING, ASK, DONE = range(4)
 
 WIRING = (
     (
-        "Left wheel servo on header 1, right wheel on 2. Brown wire to GND, on the right.",
+        "Left wheel servo on header 1, right on 2. Brown wire to GND, on the right.",
         (wiring.servo(LEFT_SERVO), wiring.servo(RIGHT_SERVO)),
     ),
 )

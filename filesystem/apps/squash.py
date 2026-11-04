@@ -10,7 +10,7 @@ Icon: sports_tennis
 import random
 
 import explorer
-from explorer import ADC0, SELECT, Analog, screen, wiring
+from explorer import ADC0, SELECT, Analog, labels, screen, wiring
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -35,7 +35,7 @@ SPEED_UP = 1.06
 
 POT_STEPS = (
     (
-        "Potentiometer pins-up in columns 4, 5, 6 just above the groove, shaft over the groove",
+        "Pot pins-up in columns 4, 5, 6 above the groove, shaft over the groove",
         (wiring.potentiometer(4),),
     ),
     (
@@ -117,9 +117,8 @@ while True:
         screen.shape(shape.circle(ball_x, ball_y, BALL_RADIUS))
     else:
         screen.font = BODY_FONT
-        screen.pen = PAPER
-        screen.text("A  Serve", rect(0, 150, WIDTH, 24), 18, align=(image.CENTER, image.MIDDLE))
         screen.pen = DIM
-        screen.text(f"Best {best}    Dial ADC0", rect(0, 176, WIDTH, 20), 14, align=(image.CENTER, image.MIDDLE))
+        screen.text(f"Best {best}", rect(0, 150, WIDTH, 24), 18, align=(image.CENTER, image.MIDDLE))
+        labels.draw(screen, TITLE_FONT, {"A": "Serve"}, "A")
 
     explorer.update()

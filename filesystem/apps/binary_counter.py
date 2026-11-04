@@ -7,7 +7,7 @@ You will need:
 Icon: calculate
 """
 import explorer
-from explorer import GP0, GP1, GP2, GP3, GP4, SELECT, UP, Output, button_c, screen, wiring
+from explorer import BACK, DOWN, GP0, GP1, GP2, GP3, GP4, SELECT, UP, Output, labels, screen, wiring
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -35,7 +35,7 @@ LED_COLUMNS = (0, 4, 8, 12, 16)
 LED_PINS = (4, 3, 2, 1, 0)
 WIRING = (
     (
-        "LEDs across the groove at columns 0, 4, 8, 12, 16. Long leg + above, short leg - below.",
+        "LEDs across the groove at columns 0, 4, 8, 12, 16. Long leg + above.",
         tuple(wiring.led_across(column, rgb) for column, rgb in zip(LED_COLUMNS, LED_RGB)),
     ),
     (
@@ -64,9 +64,9 @@ last_step = 0
 
 while True:
     now = explorer.ticks()
-    if button_c.pressed:
+    if BACK.pressed:
         count = 0
-    if explorer.button_z.pressed:
+    if DOWN.pressed:
         wiring.show(WIRING, TITLE_FONT, BODY_FONT)
     if UP.pressed:
         auto = not auto
@@ -82,25 +82,22 @@ while True:
     screen.pen = INK
     screen.clear()
 
-    for index, (value, on, pen) in enumerate(zip(VALUES, bits, BULB_COLOURS)):
-        x = 40 + index * 60
-        screen.pen = pen if on else FAINT
-        screen.shape(shape.circle(x, 70, 22))
-        screen.font = TITLE_FONT
-        screen.pen = PAPER if on else DIM
-        screen.text("1" if on else "0", rect(x - 20, 102, 40, 24), 22, align=(image.CENTER, image.MIDDLE))
-        screen.font = BODY_FONT
-        screen.pen = DIM
-        screen.text(str(value), rect(x - 20, 128, 40, 20), 14, align=(image.CENTER, image.MIDDLE))
-
     sum_text = " + ".join(str(value) for value, on in zip(VALUES, bits) if on) or "0"
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(f"{sum_text} = {count}", rect(0, 156, 320, 36), 26, align=(image.CENTER, image.MIDDLE))
+    screen.text(f"{sum_text} = {count}", rect(0, 64, 320, 36), 26, align=(image.CENTER, image.MIDDLE))
 
-    screen.font = BODY_FONT
-    screen.pen = DIM
-    screen.text(f"A  +1    C  Reset    X  Auto {'on' if auto else 'off'}    Z  Wiring", 12, 206, 13)
-    screen.text("LEDs GP4 GP3 GP2 GP1 GP0", 12, 224, 13)
+    for index, (value, on, pen) in enumerate(zip(VALUES, bits, BULB_COLOURS)):
+        x = 40 + index * 60
+        screen.pen = pen if on else FAINT
+        screen.shape(shape.circle(x, 155, 20))
+        screen.font = TITLE_FONT
+        screen.pen = INK if on else DIM
+        screen.text("1" if on else "0", rect(x - 20, 143, 40, 24), 22, align=(image.CENTER, image.MIDDLE))
+        screen.font = BODY_FONT
+        screen.pen = DIM
+        screen.text(str(value), rect(x - 20, 180, 40, 22), 18, align=(image.CENTER, image.MIDDLE))
+
+    labels.draw(screen, TITLE_FONT, {"A": "+1", "B": "Reset", "X": "Auto on" if auto else "Auto off", "Y": "Wiring"}, "A")
 
     explorer.update()

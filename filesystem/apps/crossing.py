@@ -9,7 +9,7 @@ You will need:
 Icon: directions_walk
 """
 import explorer
-from explorer import GP0, GP2, GP4, GP5, SELECT, Input, Output, button_c, screen
+from explorer import DOWN, GP0, GP2, GP4, GP5, SELECT, Input, Output, labels, screen
 from explorer import wiring
 from picovector import color, font, image, rect, shape
 
@@ -74,7 +74,7 @@ def draw_person(x, y, walking, pen):
 
 
 while True:
-    if button_c.pressed:
+    if DOWN.pressed:
         wiring.show(WIRING, TITLE_FONT, BODY_FONT)
 
     now = explorer.ticks()
@@ -106,24 +106,27 @@ while True:
     screen.clear()
 
     screen.pen = HOUSING
-    screen.shape(shape.rounded_rectangle(30, 40, 64, 144, 18))
+    screen.shape(shape.rounded_rectangle(44, 66, 64, 134, 18))
     for index, ((r, g, b), on) in enumerate(zip(LAMP_COLOURS, lit)):
         screen.pen = color.rgb(r, g, b) if on else color.rgb(r // 6, g // 6, b // 6)
-        screen.shape(shape.circle(62, 72 + index * 40, 16))
+        screen.shape(shape.circle(76, 92 + index * 41, 16))
 
     screen.pen = HOUSING
-    screen.shape(shape.rounded_rectangle(130, 24, 170, 176, 18))
+    screen.shape(shape.rounded_rectangle(124, 24, 120, 176, 18))
     walking = state == WALK or (state == FLASHING and flash_on)
-    draw_person(180, 82, False, MAN_OFF if walking else MAN_RED)
-    draw_person(250, 82, True, MAN_GREEN if walking else MAN_OFF)
+    draw_person(158, 82, False, MAN_OFF if walking else MAN_RED)
+    draw_person(212, 82, True, MAN_GREEN if walking else MAN_OFF)
 
     screen.font = TITLE_FONT
     screen.pen = WAIT_ON if state in (WAITING, AMBER) else MAN_OFF
-    screen.text("WAIT", rect(130, 140, 170, 40), 28, align=(image.CENTER, image.MIDDLE))
+    screen.text("WAIT", rect(124, 140, 120, 40), 28, align=(image.CENTER, image.MIDDLE))
 
-    screen.font = BODY_FONT
-    screen.pen = DIM
-    screen.text("A or switch  Push to cross    C  Wiring", 12, 204, 13)
-    screen.text("LEDs GP0 GP2 GP4  Switch GP5", 12, 222, 13)
+    actions = {"Y": "Wiring"}
+    if state == GREEN:
+        screen.font = BODY_FONT
+        screen.pen = DIM
+        screen.text("Or press the switch on GP5", rect(12, 206, 296, 34), 16, align=(image.CENTER, image.MIDDLE))
+        actions["A"] = "Cross"
+    labels.draw(screen, TITLE_FONT, actions, "A")
 
     explorer.update()

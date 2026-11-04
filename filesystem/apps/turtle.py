@@ -12,7 +12,7 @@ import math
 from array import array
 
 import explorer
-from explorer import DOWN, UP, button_a, button_c, button_z, screen, stick, wiring
+from explorer import BACK, SELECT, UP, button_c, button_z, labels, screen, stick, wiring
 from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, hands_off
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, mat3, rect, shape
@@ -41,11 +41,14 @@ STEER_MAX = 0.4
 PAUSE_MS = 250
 MAX_MOVES = 16
 TILE = 30
-PANEL = (164, 16, 144, 172)
+TILE_GAP = 3
+TILES_X = 64
+TILES_Y = 36
+PANEL = (202, 62, 110, 112)
 
 WIRING = (
     (
-        "Left wheel servo on header 1, right wheel on 2. Brown wire to GND, on the right.",
+        "Left wheel servo on header 1, right on 2. Brown wire to GND, on the right.",
         (wiring.servo(LEFT_SERVO), wiring.servo(RIGHT_SERVO)),
     ),
 )
@@ -191,19 +194,19 @@ while True:
                 resume_at = now + PAUSE_MS
                 if step >= len(program):
                     running = False
-        if button_z.pressed:
+        if SELECT.pressed or BACK.pressed:
             running = False
             robot.stop()
     else:
         if UP.pressed and len(program) < MAX_MOVES:
             program.append("F")
-        if button_a.pressed:
-            add_turn(-TURN_STEP)
         if button_c.pressed:
+            add_turn(-TURN_STEP)
+        if button_z.pressed:
             add_turn(TURN_STEP)
-        if DOWN.pressed and program:
+        if BACK.pressed and program:
             program.pop()
-        if button_z.pressed and program:
+        if SELECT.pressed and program:
             if heading is not None:
                 hands_off(explorer, TITLE_FONT, heading)
             running = True
@@ -217,18 +220,18 @@ while True:
     screen.clear()
 
     for index, move in enumerate(program):
-        x = 28 + (index % 4) * (TILE + 4)
-        y = 32 + (index // 4) * (TILE + 4)
+        x = TILES_X + TILE / 2 + (index % 4) * (TILE + TILE_GAP)
+        y = TILES_Y + TILE / 2 + (index // 4) * (TILE + TILE_GAP)
         current = running and index == step
         screen.pen = PAPER if current else FAINT
         screen.shape(shape.rounded_rectangle(x - TILE / 2, y - TILE / 2, TILE, TILE, 6))
         if move == "F":
-            draw_arrow(0, x, y, 9, INK if current else PAPER)
+            draw_arrow(0, x, y, 10, INK if current else PAPER)
         else:
-            draw_arrow(move, x, y - 3, 7, INK if current else PAPER)
+            draw_arrow(move, x, y - 7, 6, INK if current else PAPER)
             screen.font = BODY_FONT
             screen.pen = INK if current else DIM
-            screen.text(f"{abs(move)}", rect(x - TILE / 2, y + 4, TILE, 10), 9, align=(image.CENTER, image.TOP))
+            screen.text(f"{abs(move)}", rect(x - TILE / 2, y, TILE, 14), 14, align=(image.CENTER, image.TOP))
 
     screen.pen = FAINT
     screen.shape(shape.rounded_rectangle(*PANEL, 12))
@@ -239,12 +242,20 @@ while True:
 
     screen.font = BODY_FONT
     screen.pen = DIM
+    screen.text(f"{len(program)}/{MAX_MOVES} moves", 12, 212, 16)
+    screen.text("Gyro turns" if heading is not None else "Timed turns", rect(12, 212, 296, 20), 16, align=(image.RIGHT, image.TOP))
+
     if running:
-        screen.text("Z  Stop", 12, 196, 14)
+        actions = {"A": "Stop"}
     else:
-        screen.text("X  Forward   A  Left   C  Right", 12, 180, 13)
-        screen.text("Y  Undo   Z  Go!", 12, 198, 13)
-    screen.text(f"{len(program)}/{MAX_MOVES} moves", 200, 198, 13)
-    screen.text("Gyro turns" if heading is not None else "Timed turns", 200, 214, 12)
+        actions = {}
+        if program:
+            actions["A"] = "Go"
+            actions["B"] = "Undo"
+        actions["C"] = "Left"
+        actions["Z"] = "Right"
+        if len(program) < MAX_MOVES:
+            actions["X"] = "Forward"
+    labels.draw(screen, TITLE_FONT, actions, None if running else "A")
 
     explorer.update()

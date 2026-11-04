@@ -10,7 +10,7 @@ Icon: device_thermostat
 """
 import explorer
 from breakout_bme280 import BreakoutBME280
-from explorer import GP0, GP1, GP2, SELECT, Output, screen
+from explorer import GP0, GP1, GP2, SELECT, Output, labels, screen
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -64,34 +64,35 @@ while True:
     screen.clear()
 
     screen.pen = FAINT
-    screen.shape(shape.rounded_rectangle(52, TUBE_TOP - 6, 24, TUBE_BOTTOM - TUBE_TOP + 20, 12))
-    screen.shape(shape.circle(64, 190, 26))
+    screen.shape(shape.rounded_rectangle(252, TUBE_TOP - 6, 24, TUBE_BOTTOM - TUBE_TOP + 20, 12))
+    screen.shape(shape.circle(264, 190, 26))
     level = max(0.0, min(1.0, (temperature - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)))
     gauge += (level - gauge) * 0.15
     top = TUBE_BOTTOM - (TUBE_BOTTOM - TUBE_TOP) * gauge
     screen.pen = pen
-    screen.shape(shape.rounded_rectangle(58, top, 12, 196 - top, 6))
-    screen.shape(shape.circle(64, 190, 20))
+    screen.shape(shape.rounded_rectangle(258, top, 12, 196 - top, 6))
+    screen.shape(shape.circle(264, 190, 20))
 
     screen.font = BODY_FONT
     for mark in range(SCALE_MIN, SCALE_MAX + 1, 10):
         y = TUBE_BOTTOM - (TUBE_BOTTOM - TUBE_TOP) * (mark - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)
         screen.pen = FAINT
-        screen.shape(shape.line(82, y, 90, y, 2))
+        screen.shape(shape.line(238, y, 246, y, 2))
         screen.pen = DIM
-        screen.text(str(mark), 94, y - 8, 12)
+        screen.text(str(mark), rect(200, y - 8, 34, 16), 14, align=(image.RIGHT, image.MIDDLE))
 
     shown = temperature * 9 / 5 + 32 if fahrenheit else temperature
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(f"{shown:.1f}°{'F' if fahrenheit else 'C'}", rect(130, 50, 180, 60), 44, align=(image.CENTER, image.MIDDLE))
+    screen.text(f"{shown:.1f}°{'F' if fahrenheit else 'C'}", rect(12, 60, 190, 48), 44, align=(image.CENTER, image.MIDDLE))
     screen.pen = pen
-    screen.text(mood, rect(130, 110, 180, 40), 28, align=(image.CENTER, image.MIDDLE))
+    screen.text(mood, rect(12, 108, 190, 36), 28, align=(image.CENTER, image.MIDDLE))
 
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text(f"Comfy is {COLD}-{HOT}°C", rect(130, 150, 180, 20), 14, align=(image.CENTER, image.MIDDLE))
-    screen.text("A  °C / °F", 130, 196, 13)
-    screen.text("Blue GP0  Green GP1  Red GP2", 130, 214, 12)
+    screen.text(f"Comfy is {COLD}-{HOT}°C", rect(12, 146, 190, 20), 16, align=(image.CENTER, image.MIDDLE))
+    screen.text("Blue GP0  Green GP1  Red GP2", rect(12, 212, 230, 20), 14, align=(image.LEFT, image.MIDDLE))
+
+    labels.draw(screen, TITLE_FONT, {"A": "Celsius" if fahrenheit else "Fahrenheit"})
 
     explorer.update()

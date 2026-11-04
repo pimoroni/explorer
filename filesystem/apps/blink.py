@@ -7,7 +7,7 @@ You will need:
 Icon: lightbulb
 """
 import explorer
-from explorer import GP0, GP1, GP2, GP3, GP4, Output, button_a, button_b, button_c, button_x, button_y, button_z, screen, wiring
+from explorer import GP0, GP1, GP2, GP3, GP4, Output, button_a, button_b, button_c, button_x, button_y, button_z, labels, screen, wiring
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -25,7 +25,7 @@ LED_COLUMNS = (0, 4, 8, 12, 16)
 LED_PINS = (4, 3, 2, 1, 0)
 WIRING = (
     (
-        "LEDs across the groove at columns 0, 4, 8, 12, 16. Long leg + above, short leg - below.",
+        "LEDs across the groove at columns 0, 4, 8, 12, 16. Long leg + above.",
         tuple(wiring.led_across(column, rgb) for column, rgb in zip(LED_COLUMNS, LED_RGB)),
     ),
     (
@@ -49,10 +49,11 @@ STEPS = 10
 GAMMA = 2.5
 BLINK_PERIOD_MS = 1000
 PWM_HZ = 1000
-SLIDER_SPACING = 64
-TRACK_TOP = 50
-TRACK_HEIGHT = 110
-TRACK_WIDTH = 18
+SLIDER_SPACING = 36
+SLIDER_LEFT = 92
+TRACK_TOP = 40
+TRACK_HEIGHT = 136
+TRACK_WIDTH = 16
 
 wiring.show(WIRING, TITLE_FONT, BODY_FONT)
 
@@ -94,14 +95,14 @@ while True:
             led.brightness(output)
 
         r, g, b = LED_RGB[index]
-        x = SLIDER_SPACING / 2 + index * SLIDER_SPACING
+        x = SLIDER_LEFT + index * SLIDER_SPACING
         glow = output ** (1 / GAMMA)
         screen.pen = color.rgb(int(r * glow), int(g * glow), int(b * glow)) if glow > 0 else FAINT
-        screen.shape(shape.circle(x, 24, 14))
+        screen.shape(shape.circle(x, 16, 12))
 
         if index == selected:
             screen.pen = FAINT
-            screen.shape(shape.rounded_rectangle(x - 29, TRACK_TOP - 8, 58, 160, 8))
+            screen.shape(shape.rounded_rectangle(x - 17, TRACK_TOP - 6, 34, TRACK_HEIGHT + 64, 8))
 
         screen.pen = color.rgb(14, 14, 14)
         screen.shape(shape.rounded_rectangle(x - TRACK_WIDTH / 2, TRACK_TOP, TRACK_WIDTH, TRACK_HEIGHT, TRACK_WIDTH / 2))
@@ -112,16 +113,21 @@ while True:
 
         screen.font = TITLE_FONT
         screen.pen = PAPER if lit[index] else DIM
-        label = f"{levels[index] * 10}%" if lit[index] else "Off"
-        screen.text(label, rect(x - 30, TRACK_TOP + TRACK_HEIGHT + 4, 60, 22), 16, align=(image.CENTER, image.MIDDLE))
+        label = f"{levels[index] * 10}" if lit[index] else "Off"
+        screen.text(label, rect(x - 18, TRACK_TOP + TRACK_HEIGHT + 6, 36, 20), 16, align=(image.CENTER, image.MIDDLE))
         screen.font = BODY_FONT
         screen.pen = DIM
-        mode = "1 Hz" if blinking[index] else "Dim"
-        screen.text(f"GP{LED_PINS[index]} {mode}", rect(x - 30, TRACK_TOP + TRACK_HEIGHT + 24, 60, 18), 12, align=(image.CENTER, image.MIDDLE))
+        mode = "Blink" if blinking[index] else "Dim"
+        screen.text(mode, rect(x - 18, TRACK_TOP + TRACK_HEIGHT + 30, 36, 18), 14, align=(image.CENTER, image.MIDDLE))
 
-    screen.font = BODY_FONT
-    screen.pen = PAPER
-    screen.text("C Z  Choose    X Y  Up / down", 10, 202, 14)
-    screen.text("A  On / off    B  Dim / blink", 10, 220, 14)
+    actions = {
+        "A": "Turn off" if lit[selected] else "Turn on",
+        "B": "Dim" if blinking[selected] else "Blink",
+        "C": "Left",
+        "X": "Up",
+        "Y": "Down",
+        "Z": "Right",
+    }
+    labels.draw(screen, TITLE_FONT, actions)
 
     explorer.update()

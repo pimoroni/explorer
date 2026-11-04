@@ -9,7 +9,7 @@ You will need:
 Icon: cell_tower
 """
 import explorer
-from explorer import GP0, GP3, SELECT, Input, Output, button_c, screen
+from explorer import BACK, GP0, GP3, SELECT, Input, Output, labels, screen
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -69,7 +69,7 @@ while True:
         elif text and not text.endswith(" ") and silence > WORD_GAP_MS:
             text += " "
 
-    if button_c.pressed:
+    if BACK.pressed:
         text = ""
         symbols = ""
 
@@ -77,34 +77,38 @@ while True:
     screen.clear()
 
     screen.pen = FAINT
-    screen.shape(shape.rounded_rectangle(12, 12, 296, 96, 12))
+    screen.shape(shape.rounded_rectangle(72, 12, 236, 120, 12))
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(text + "_", rect(24, 22, 272, 80), 24)
+    screen.text(text + "_", rect(84, 22, 212, 100), 24)
 
-    x = 40
+    x = 92
     for symbol in symbols:
         screen.pen = ACCENT
         if symbol == ".":
-            screen.shape(shape.circle(x, 140, 8))
+            screen.shape(shape.circle(x, 155, 8))
             x += 26
         else:
-            screen.shape(shape.rounded_rectangle(x - 8, 132, 40, 16, 8))
+            screen.shape(shape.rounded_rectangle(x - 8, 147, 40, 16, 8))
             x += 50
     if key_down_at is not None:
         screen.pen = PAPER
         held = min(1.0, (now - key_down_at) / DASH_MS)
-        screen.shape(shape.rounded_rectangle(x - 8, 132, 16 + 24 * held, 16, 8))
+        screen.shape(shape.rounded_rectangle(x - 8, 147, 16 + 24 * held, 16, 8))
 
     guess = CODES.get(symbols, "")
     screen.font = TITLE_FONT
     screen.pen = DIM
-    screen.text(guess, rect(240, 116, 60, 50), 40, align=(image.CENTER, image.MIDDLE))
+    screen.text(guess, rect(248, 134, 60, 42), 40, align=(image.CENTER, image.MIDDLE))
 
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("Short press = dot   Long press = dash", 12, 178, 14)
-    screen.text("A or switch  Key    C  Clear", 12, 202, 13)
-    screen.text("LED GP0  Switch GP3", 12, 220, 13)
+    screen.text("Short press dot, long press dash", 12, 184, 16)
+    screen.text("LED GP0  Switch GP3", 12, 212, 14)
+
+    actions = {"A": "Key"}
+    if text or symbols:
+        actions["B"] = "Clear"
+    labels.draw(screen, TITLE_FONT, actions, None if text or symbols else "A")
 
     explorer.update()

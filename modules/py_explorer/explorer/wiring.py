@@ -5,6 +5,8 @@ from array import array
 
 from picovector import color, image, mat3, rect, shape
 
+from . import labels
+
 INK = color.rgb(31, 29, 27)
 PAPER = color.rgb(239, 235, 227)
 DIM = color.rgb(125, 120, 112)
@@ -394,11 +396,11 @@ def _draw(screen, title_font, body_font, steps, timeline, elapsed):
 
     screen.font = body_font
     screen.pen = DIM
-    screen.text(f"Wiring  {current + 1} of {len(steps)}", 10, 4, 12)
-    screen.text("A  Start", rect(10, 4, 300, 14), 12, align=(image.RIGHT, image.TOP))
+    screen.text(f"{current + 1}/{len(steps)}", 8, 2, 13)
     screen.font = title_font
     screen.pen = PAPER
-    screen.text(steps[current][0], rect(10, 18, 300, 32), 13)
+    screen.text(steps[current][0], rect(34, 2, 280, 30), 13)
+    labels.draw(screen, title_font, {"A": "Start"}, "A")
 
 
 def show(steps, title_font, body_font):

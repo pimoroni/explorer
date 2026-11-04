@@ -12,7 +12,7 @@ import random
 
 import explorer
 from breakout_ltr559 import BreakoutLTR559
-from explorer import DOWN, SELECT, UP, screen, wiring
+from explorer import DOWN, SELECT, UP, labels, screen, wiring
 from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, hands_off
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, rect, shape
@@ -45,7 +45,7 @@ TILT_LIMIT = 8
 
 WIRING = (
     (
-        "Left wheel servo on header 1, right wheel on 2. Brown wire to GND, on the right.",
+        "Left wheel servo on header 1, right on 2. Brown wire to GND, on the right.",
         (wiring.servo(LEFT_SERVO), wiring.servo(RIGHT_SERVO)),
     ),
 )
@@ -117,31 +117,36 @@ while True:
 
     screen.font = TITLE_FONT
     screen.pen = ALERT if state in (BACKING, TURNING) else GO if state == DRIVING else PAPER
-    screen.text(LABELS[state], 16, 24, 36)
+    screen.text(LABELS[state], 12, 0, 26)
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text(f"Dodged {dodges} obstacle{'' if dodges == 1 else 's'}", 16, 70, 16)
+    screen.text(f"Dodged {dodges} obstacle{'' if dodges == 1 else 's'}", 12, 64, 18)
     if reason:
-        screen.text(f"Last: {reason}", 16, 90, 16)
+        screen.text(f"Last: {reason}", 12, 86, 16)
 
     level = min(1.0, proximity / PROXIMITY_MAX)
     marker = 16 + 288 * threshold / PROXIMITY_MAX
     screen.pen = FAINT
-    screen.shape(shape.rounded_rectangle(16, 130, 288, 16, 8))
+    screen.shape(shape.rounded_rectangle(16, 142, 288, 14, 7))
     screen.pen = ALERT if seen else GO
-    screen.shape(shape.rounded_rectangle(16, 130, 16 + 272 * level, 16, 8))
+    screen.shape(shape.rounded_rectangle(16, 142, 14 + 274 * level, 14, 7))
     screen.pen = PAPER
-    screen.shape(shape.rectangle(marker - 1, 122, 3, 32))
+    screen.shape(shape.rectangle(marker - 1, 136, 3, 26))
     screen.pen = DIM
-    screen.text("far", 16, 156, 12)
-    screen.text("near", rect(16, 156, 288, 16), 12, align=(image.RIGHT, image.TOP))
+    screen.text("Reacts at", 12, 110, 16)
+    screen.text("Far", 16, 160, 14)
+    screen.text("Near", rect(16, 160, 288, 16), 14, align=(image.RIGHT, image.TOP))
     screen.pen = ALERT if bumped else DIM
-    screen.text(f"Tilt {heading.tilt:.0f}°", 16, 180, 14)
+    screen.text(f"Tilt {heading.tilt:.0f}°", 12, 182, 16)
     if not robot.settings["level"]:
         screen.pen = DIM
-        screen.text("Run Calibrate to set level", 110, 180, 14)
+        screen.text("Run Calibrate to set level", 12, 212, 16)
 
-    screen.pen = DIM
-    screen.text(f"A  {'Stop' if state != STOPPED else 'Go'}    X Y  Sensitivity", 12, 216, 14)
+    actions = {"A": "Go" if state == STOPPED else "Stop"}
+    if threshold > THRESHOLD_STEP:
+        actions["X"] = "Further"
+    if threshold < PROXIMITY_MAX - THRESHOLD_STEP:
+        actions["Y"] = "Nearer"
+    labels.draw(screen, TITLE_FONT, actions, "A" if state == STOPPED else None)
 
     explorer.update()

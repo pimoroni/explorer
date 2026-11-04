@@ -8,7 +8,7 @@ You will need:
 Icon: traffic
 """
 import explorer
-from explorer import GP0, GP2, GP4, SELECT, Output, button_c, screen
+from explorer import DOWN, GP0, GP2, GP4, SELECT, Output, labels, screen
 from explorer import wiring
 from picovector import color, font, image, rect, shape
 
@@ -51,7 +51,7 @@ stage = 0
 stage_started = explorer.ticks()
 
 while True:
-    if button_c.pressed:
+    if DOWN.pressed:
         wiring.show(WIRING, TITLE_FONT, BODY_FONT)
         stage_started = explorer.ticks()
 
@@ -68,30 +68,26 @@ while True:
     screen.clear()
 
     screen.pen = HOUSING
-    screen.shape(shape.rounded_rectangle(48, 24, 92, 192, 24))
+    screen.shape(shape.rounded_rectangle(72, 24, 92, 192, 24))
     for ((r, g, b), y), on in zip(LAMPS, lit):
         if on:
             screen.pen = color.rgb(r, g, b, 60)
-            screen.shape(shape.circle(94, y, 34))
+            screen.shape(shape.circle(118, y, 34))
             screen.pen = color.rgb(r, g, b)
         else:
             screen.pen = color.rgb(r // 6, g // 6, b // 6)
-        screen.shape(shape.circle(94, y, 24))
+        screen.shape(shape.circle(118, y, 24))
 
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(name, rect(160, 60, 150, 70), 26)
+    screen.text(name, rect(180, 60, 136, 44), 24, align=(image.LEFT, image.MIDDLE))
 
     progress = min(1.0, (now - stage_started) / duration)
     screen.pen = FAINT
-    screen.shape(shape.rounded_rectangle(160, 140, 140, 8, 4))
+    screen.shape(shape.rounded_rectangle(180, 151, 120, 8, 4))
     screen.pen = PAPER
-    screen.shape(shape.rounded_rectangle(160, 140, 8 + 132 * progress, 8, 4))
+    screen.shape(shape.rounded_rectangle(180, 151, 8 + 112 * progress, 8, 4))
 
-    screen.font = BODY_FONT
-    screen.pen = DIM
-    screen.text("A  Next light", 160, 164, 14)
-    screen.text("C  Wiring", 160, 184, 14)
-    screen.text("Red GP0  Yellow GP2  Green GP4", 12, 220, 13)
+    labels.draw(screen, TITLE_FONT, {"A": "Next", "Y": "Wiring"})
 
     explorer.update()

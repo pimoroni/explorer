@@ -13,7 +13,7 @@ import math
 from array import array
 
 import explorer
-from explorer import GP3, SELECT, Input, screen, wiring
+from explorer import GP3, SELECT, Input, labels, screen, wiring
 from picovector import color, font, image, rect, shape
 from servo import CONTINUOUS
 
@@ -104,7 +104,9 @@ while True:
     screen.text("Hooray!" if waving else "", rect(110, 150, 200, 40), 30)
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text(f"Waved {waves} time{'' if waves == 1 else 's'}", 210, 196, 13)
-    screen.text("A or switch  Wave    Servo 1  Switch GP3", 12, 220, 13)
+    screen.text("Press the switch to wave", 12, 212, 16)
+    screen.text(f"Waved {waves} time{'' if waves == 1 else 's'}", rect(12, 212, 296, 20), 16, align=(image.RIGHT, image.TOP))
+
+    labels.draw(screen, TITLE_FONT, {} if waving else {"A": "Wave"}, "A")
 
     explorer.update()

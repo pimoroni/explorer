@@ -23,16 +23,16 @@ DIM = color.rgb(125, 120, 112)
 FAINT = color.rgb(58, 56, 53)
 ACCENT = color.rgb(255, 204, 51)
 
-WAVE_LEFT = 20
-WAVE_WIDTH = 280
-WAVE_HIGH = 120
-WAVE_LOW = 180
+WAVE_LEFT = 44
+WAVE_WIDTH = 260
+WAVE_HIGH = 104
+WAVE_LOW = 196
 PERIODS = 4
 LINE_WIDTH = 3
 
 POT_STEPS = (
     (
-        "Potentiometer pins-up in columns 4, 5, 6 just above the groove, shaft over the groove",
+        "Pot pins-up in columns 4, 5, 6 above the groove, shaft over the groove",
         (wiring.potentiometer(4),),
     ),
     (
@@ -67,10 +67,10 @@ while True:
 
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(f"{round(duty * 100)}%", 20, 14, 44)
+    screen.text(f"{round(duty * 100)}%", 16, 12, 52)
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("of the time the LED is on", rect(150, 26, 160, 40), 14)
+    screen.text("of the time\nthe LED is on", rect(160, 22, 150, 50), 18)
 
     screen.pen = FAINT
     screen.shape(shape.line(WAVE_LEFT, WAVE_LOW, WAVE_LEFT + WAVE_WIDTH, WAVE_LOW, 1))
@@ -91,8 +91,7 @@ while True:
 
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("on", 0, WAVE_HIGH - 8, 12)
-    screen.text("off", 0, WAVE_LOW - 8, 12)
-    screen.text("LED GP0  Dial ADC0", 12, 214, 14)
+    screen.text("on", rect(0, WAVE_HIGH - 12, WAVE_LEFT - 12, 24), 16, align=(image.RIGHT, image.MIDDLE))
+    screen.text("off", rect(0, WAVE_LOW - 12, WAVE_LEFT - 12, 24), 16, align=(image.RIGHT, image.MIDDLE))
 
     explorer.update()

@@ -11,7 +11,7 @@ Icon: timer
 import random
 
 import explorer
-from explorer import GP0, GP3, SELECT, Input, Output, screen
+from explorer import GP0, GP3, SELECT, Input, Output, labels, screen
 from picovector import color, font, image, rect
 
 screen.antialias = image.X2
@@ -76,6 +76,11 @@ while True:
     screen.pen = INK if state == GO_NOW else DIM
     if best is not None:
         screen.text(f"Best {best} ms", rect(0, 136, 320, 24), 18, align=(image.CENTER, image.MIDDLE))
-    screen.text("A or switch  Go    LED GP0  Switch GP3", 12, 220, 13)
+    screen.text("LED GP0  Switch GP3", rect(0, 206, 320, 34), 14, align=(image.CENTER, image.MIDDLE))
+
+    if state in (WAITING, GO_NOW):
+        labels.draw(screen, TITLE_FONT, {"A": "Hit"}, "A" if state == GO_NOW else None)
+    else:
+        labels.draw(screen, TITLE_FONT, {"A": "Start" if state == READY else "Again"}, "A")
 
     explorer.update()

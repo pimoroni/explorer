@@ -12,7 +12,7 @@ import math
 
 import explorer
 from breakout_ltr559 import BreakoutLTR559
-from explorer import DOWN, GP0, UP, Output, screen
+from explorer import DOWN, GP0, UP, Output, labels, screen
 from picovector import color, font, image, rect, shape
 
 screen.antialias = image.X2
@@ -28,7 +28,7 @@ DIM = color.rgb(125, 120, 112)
 FAINT = color.rgb(58, 56, 53)
 GLOW = color.rgb(255, 204, 51)
 
-BAR = (40, 150, 240, 12)
+BAR = (40, 170, 240, 12)
 LOG_MIN = -1
 LOG_MAX = 4
 FADE_SPEED = 0.05
@@ -64,18 +64,21 @@ while True:
 
     if level > 0.05:
         screen.pen = color.rgb(255, 204, 51, int(80 * level))
-        screen.shape(shape.circle(70, 70, 40 + 16 * level))
+        screen.shape(shape.circle(62, 66, 40 + 16 * level))
     screen.pen = GLOW if level > 0.05 else FAINT
-    screen.shape(shape.circle(70, 70, 40))
+    screen.shape(shape.circle(62, 66, 40))
     screen.pen = INK
-    screen.shape(shape.circle(88, 56, 34))
+    screen.shape(shape.circle(80, 52, 34))
 
+    reading_text = f"{lux:.0f}"
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(f"{lux:.0f} lux", rect(130, 36, 180, 40), 32)
+    screen.text(reading_text, 122, 22, 32)
+    unit_x = 128 + screen.measure_text(reading_text, font_size=32)[0]
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("Dark, light on" if dark else "Bright, light off", 130, 80, 16)
+    screen.text("lux", unit_x, 36, 18)
+    screen.text("Dark, light on" if dark else "Bright, light off", 122, 70, 18)
 
     x, y, width, height = BAR
     screen.pen = FAINT
@@ -87,10 +90,14 @@ while True:
     screen.shape(shape.rectangle(marker - 1, y - 8, 3, height + 16))
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("dark", x, y + 20, 12)
-    screen.text("sunny", x + width - 32, y + 20, 12)
-    screen.text(f"Switch on below {threshold:.0f} lux", rect(0, y - 30, 320, 16), 13, align=(image.CENTER, image.TOP))
+    screen.text("dark", rect(x, y + 22, width, 16), 14, align=(image.LEFT, image.TOP))
+    screen.text("sunny", rect(x, y + 22, width, 16), 14, align=(image.RIGHT, image.TOP))
+    screen.pen = PAPER
+    screen.text(f"Switch on below {threshold:.0f} lux", rect(0, y - 32, 320, 18), 17, align=(image.CENTER, image.TOP))
 
-    screen.text("X Y  Threshold    LED GP0", 12, 220, 13)
+    screen.pen = DIM
+    screen.text("LED GP0", rect(0, 218, 320, 16), 14, align=(image.CENTER, image.TOP))
+
+    labels.draw(screen, TITLE_FONT, {"X": "Higher", "Y": "Lower"})
 
     explorer.update()
