@@ -39,6 +39,7 @@ def hands_off(explorer, title_font, heading):
     explorer.update()
     time.sleep_ms(HANDS_OFF_MS)
     heading.settle()
+    explorer.poll()
 
 
 class Robot:
