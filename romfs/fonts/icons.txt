@@ -1,4 +1,5 @@
 apps e5c3
+arrow_back e5c4
 brightness_6 e3ab
 calculate ea5f
 casino eb40
@@ -13,6 +14,7 @@ music_note e405
 nightlight f03d
 palette e40a
 partly_cloudy_day f172
+play_arrow e037
 psychology ea4a
 route eacd
 smart_toy f06c

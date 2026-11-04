@@ -51,6 +51,7 @@ DETAIL_TEXT_LEFT = 48
 DETAIL_TEXT_WIDTH = DETAIL_RIGHT - DETAIL_TEXT_LEFT - 10
 ACTION_RADIUS = 13
 ACTION_ICON_X = 18
+ACTION_ICON_SIZE = 20
 ACTION_WIDTH = ACTION_ICON_X + 9 + ACTION_RADIUS
 NEEDS_WIDTH = 216
 NEEDS_LINE = 20
@@ -254,12 +255,9 @@ def draw_action(letter, icon, x, y, t, mirrored=False, from_chevron=False, chevr
         else:
             text_at_caps(letter, centre_x, y, 13, centred=True)
     if fade_in > 0:
+        screen.font = ICON_FONT
         screen.pen = color.rgb(31, 29, 27, int(255 * fade_in))
-        if icon == "back":
-            screen.shape(shape.custom(array("f", (centre_x + 6, y, centre_x - 6, y))).stroke(2.5, STROKE))
-            screen.shape(shape.custom(array("f", (centre_x - 1, y - 5, centre_x - 6, y, centre_x - 1, y + 5))).stroke(2.5, STROKE))
-        else:
-            screen.shape(shape.custom(array("f", (centre_x - 4, y - 7, centre_x + 6, y, centre_x - 4, y + 7))))
+        screen.text(ICONS.get(icon, ""), centre_x, y - ACTION_ICON_SIZE / 2, ACTION_ICON_SIZE / 2)
 
 
 def wrap_text(text, width, size):
@@ -337,8 +335,8 @@ def draw_transition(apps, page, slot, progress):
         chrome_x = CHROME_X + (DETAIL_RIGHT - CARD_RIGHT) * slide
         draw_chevron(ROW_CENTRES[0], True, page > 0, chrome_x)
         draw_scrollbar(page, page_count(apps), chrome_x)
-    draw_action(ROW_BUTTONS[slot].name, "back", CARD_LEFT, centre, pill)
-    draw_action(button_z.name, "play", CHROME_X, ROW_CENTRES[2], pill, mirrored=True, from_chevron=True, chevron_enabled=page < page_count(apps) - 1)
+    draw_action(ROW_BUTTONS[slot].name, "arrow_back", CARD_LEFT, centre, pill)
+    draw_action(button_z.name, "play_arrow", CHROME_X, ROW_CENTRES[2], pill, mirrored=True, from_chevron=True, chevron_enabled=page < page_count(apps) - 1)
 
 
 def animate(apps, page, slot, forward):

@@ -12,17 +12,23 @@ BADGEWARE_FONTS = ROOT.parent / "badgeware" / "badgeware-fonts"
 DEFAULT_SYMBOLS = BADGEWARE_FONTS / "roboto-medium-with-material-symbols" / "src" / "MaterialSymbolsSharp_Filled-Regular.ttf"
 DEFAULT_ALRIGHT_FONTS = BADGEWARE_FONTS / "alright-fonts"
 FALLBACK = "apps"
+MENU_ICONS = ("arrow_back", "play_arrow")
 FLAG_16BIT_POINT_COUNT = 0b0000001
 QUALITY = 5
 
 
 def icon_names():
-    names = {FALLBACK}
+    names = {FALLBACK, *MENU_ICONS}
     for path in sorted(APPS.glob("*.py")):
         for line in path.read_text().splitlines()[:20]:
             if line.startswith("Icon:"):
                 names.add(line[5:].strip())
     return sorted(names)
+
+
+def drop_cancelling_contours(glyph):
+    keys = [tuple(sorted((int(point.x), int(point.y)) for point in contour)) for contour in glyph.contours]
+    glyph.contours = [contour for contour, key in zip(glyph.contours, keys) if keys.count(key) == 1]
 
 
 def main():
@@ -45,7 +51,7 @@ def main():
     with open(args.symbols, "rb") as symbols, open(args.symbols, "rb") as icons, contextlib.redirect_stdout(io.StringIO()):
         encoder = Encoder(symbols, icons, quality=QUALITY)
         for name in names:
-            encoder.get_glyph(codepoints[name])
+            drop_cancelling_contours(encoder.get_glyph(codepoints[name]))
 
     font = b"af!?"
     font += struct.pack(">HHHH", FLAG_16BIT_POINT_COUNT, len(encoder.glyphs), encoder.total_path_count(), encoder.total_point_count())
