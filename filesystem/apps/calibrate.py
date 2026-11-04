@@ -33,9 +33,9 @@ WARMUP_MS = 400
 SPIN_MIN_DEGREES = 20
 TRIM_STEP = 0.01
 TRIM_LIMIT = 0.5
-AUTO_GAIN = 0.004
+AUTO_GAIN = 0.003
 AUTO_LIMIT = 0.05
-STRAIGHT_DPS = 0.5
+STRAIGHT_DEGREES = 5
 
 SPIN, DIRECTION, STRAIGHT = range(3)
 TITLES = ("Spin", "Direction", "Drive straight")
@@ -72,6 +72,10 @@ def update_setting(name, value):
 
 def set_balance(value):
     update_setting("balance", round(max(-TRIM_LIMIT, min(TRIM_LIMIT, value)), 3))
+
+
+def veer():
+    return drift * (STRAIGHT_MS - WARMUP_MS) / 1000
 
 
 def run_ms():
@@ -153,7 +157,7 @@ while True:
                 set_balance(robot.settings["balance"] - TRIM_STEP)
             if DOWN.pressed:
                 set_balance(robot.settings["balance"] + TRIM_STEP)
-            if BACK.pressed and drift is not None:
+            if BACK.pressed and drift is not None and abs(veer()) >= STRAIGHT_DEGREES:
                 set_balance(robot.settings["balance"] + max(-AUTO_LIMIT, min(AUTO_LIMIT, drift * AUTO_GAIN)))
                 drift = None
 
@@ -207,9 +211,9 @@ while True:
         screen.pen = DIM
         screen.text("A  Yes    X  No", rect(16, 150, 288, 20), 16)
     elif stage == STRAIGHT and phase == DONE and drift is not None:
-        straight = abs(drift) < STRAIGHT_DPS
+        straight = abs(veer()) < STRAIGHT_DEGREES
         screen.pen = ACCENT if straight else ALERT
-        text = "Straight!" if straight else f"Veered {'left' if drift > 0 else 'right'} {abs(drift):.1f} deg/s.  B  Fix it"
+        text = "Straight enough!" if straight else f"Veered {'left' if drift > 0 else 'right'} {abs(veer()):.0f} degrees.  B  Fix it"
         screen.text(text, rect(16, 168, 288, 20), 15)
     elif message:
         screen.pen = ACCENT if message_good else ALERT
