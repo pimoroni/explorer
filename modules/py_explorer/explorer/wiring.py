@@ -400,7 +400,7 @@ def _draw(screen, title_font, body_font, steps, timeline, elapsed):
     screen.font = title_font
     screen.pen = PAPER
     screen.text(steps[current][0], rect(34, 2, 280, 30), 13)
-    labels.draw(screen, title_font, {"A": "Start"}, "A")
+    labels.draw(screen, title_font, {"A": labels.Icon("play_circle")}, "A")
 
 
 def show(steps, title_font, body_font):
