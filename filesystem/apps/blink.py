@@ -121,7 +121,7 @@ while True:
         screen.text(mode, rect(x - 18, TRACK_TOP + TRACK_HEIGHT + 30, 36, 18), 14, align=(image.CENTER, image.MIDDLE))
 
     actions = {
-        "A": "Turn off" if lit[selected] else "Turn on",
+        "A": "Off" if lit[selected] else "On",
         "B": "Dim" if blinking[selected] else "Blink",
         "C": "Left",
         "X": "Up",
