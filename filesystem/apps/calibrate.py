@@ -10,7 +10,7 @@ Icon: tune
 """
 import explorer
 from explorer import BACK, DOWN, SELECT, UP, button_c, button_z, screen, stick, wiring
-from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, save
+from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, hands_off, save
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, rect, shape
 
@@ -86,7 +86,9 @@ def start_run():
     global phase, run_started, drift_total, drift_samples, message
     robot.stop()
     if heading is not None:
-        heading.settle()
+        hands_off(explorer, TITLE_FONT, heading)
+        if stage == SPIN:
+            update_setting("level", list(heading.measured_up))
     phase = RUNNING
     message = ""
     drift_total = 0.0
@@ -172,7 +174,7 @@ while True:
     screen.text(TITLES[stage], 16, 22, 26)
 
     if stage == SPIN:
-        instructions = "Put the robot on the floor. A spins it on the spot for a second."
+        instructions = "Put the robot on a flat floor. A spins it on the spot for a second."
         question = "Did it spin right (clockwise)?"
     elif stage == DIRECTION:
         instructions = "Room ahead of the robot? A drives it for a second."

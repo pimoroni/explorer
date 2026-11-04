@@ -3,12 +3,13 @@ import math
 import time
 
 CALIBRATION_FILE = "/robot.json"
-DEFAULTS = {"balance": 0.0, "flip": False, "swapped": False}
+DEFAULTS = {"balance": 0.0, "flip": False, "swapped": False, "level": None}
 LEFT_SERVO = 1
 RIGHT_SERVO = 2
 GYRO_DPS = 0.00875
 SETTLE_MS = 500
 SETTLE_GAP_MS = 10
+HANDS_OFF_MS = 1000
 
 
 def load():
@@ -24,6 +25,20 @@ def load():
 def save(settings):
     with open(CALIBRATION_FILE, "w") as calibration_file:
         json.dump(settings, calibration_file)
+
+
+def hands_off(explorer, title_font, heading):
+    from picovector import color, image, rect
+
+    screen = explorer.screen
+    screen.pen = color.rgb(31, 29, 27)
+    screen.clear()
+    screen.font = title_font
+    screen.pen = color.rgb(239, 235, 227)
+    screen.text("Hands off...", rect(0, 0, 320, 240), 30, align=(image.CENTER, image.MIDDLE))
+    explorer.update()
+    time.sleep_ms(HANDS_OFF_MS)
+    heading.settle()
 
 
 class Robot:
@@ -58,9 +73,11 @@ class Robot:
 
 
 class Heading:
-    def __init__(self, imu):
+    def __init__(self, imu, level=None):
         self.imu = imu
-        self.up = (0.0, 0.0, 1.0)
+        self.level = tuple(level) if level else None
+        self.up = self.level or (0.0, 0.0, 1.0)
+        self.measured_up = self.up
         self.bias = (0.0, 0.0, 0.0)
         self.heading = 0.0
         self.rate = 0.0
@@ -78,7 +95,8 @@ class Heading:
             time.sleep_ms(SETTLE_GAP_MS)
         means = [total / count for total in totals]
         length = math.sqrt(sum(value * value for value in means[:3])) or 1
-        self.up = tuple(value / length for value in means[:3])
+        self.measured_up = tuple(value / length for value in means[:3])
+        self.up = self.level or self.measured_up
         self.bias = tuple(means[3:])
         self.heading = 0.0
         self.rate = 0.0

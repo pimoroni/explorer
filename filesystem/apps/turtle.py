@@ -13,7 +13,7 @@ from array import array
 
 import explorer
 from explorer import DOWN, UP, button_a, button_c, button_z, screen, stick, wiring
-from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot
+from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, hands_off
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, mat3, rect, shape
 
@@ -55,7 +55,7 @@ wiring.show(WIRING, TITLE_FONT, BODY_FONT)
 robot = Robot(explorer)
 heading = None
 if stick.connected(explorer.i2c()):
-    heading = Heading(explorer.sensor(LSM6DS3, TITLE_FONT, on_disconnect=robot.stop))
+    heading = Heading(explorer.sensor(LSM6DS3, TITLE_FONT, on_disconnect=robot.stop), robot.settings["level"])
 
 program = ["F", 90, "F", 90, "F", 90, "F", 90]
 running = False
@@ -205,7 +205,7 @@ while True:
             program.pop()
         if button_z.pressed and program:
             if heading is not None:
-                heading.settle()
+                hands_off(explorer, TITLE_FONT, heading)
             running = True
             step = 0
             step_active = False

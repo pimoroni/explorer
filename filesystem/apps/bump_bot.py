@@ -13,7 +13,7 @@ import random
 import explorer
 from breakout_ltr559 import BreakoutLTR559
 from explorer import DOWN, SELECT, UP, screen, wiring
-from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot
+from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, hands_off
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, rect, shape
 
@@ -54,7 +54,7 @@ wiring.show(WIRING, TITLE_FONT, BODY_FONT)
 robot = Robot(explorer)
 ltr = explorer.sensor(proximity_sensor, TITLE_FONT, on_disconnect=robot.stop)
 imu = explorer.sensor(LSM6DS3, TITLE_FONT, on_disconnect=robot.stop)
-heading = Heading(imu)
+heading = Heading(imu, robot.settings["level"])
 heading.settle()
 
 STOPPED, DRIVING, BACKING, TURNING = range(4)
@@ -83,7 +83,7 @@ while True:
     if SELECT.pressed:
         robot.stop()
         if state == STOPPED:
-            heading.settle()
+            hands_off(explorer, TITLE_FONT, heading)
             state = DRIVING
         else:
             state = STOPPED
@@ -137,6 +137,9 @@ while True:
     screen.text("near", rect(16, 156, 288, 16), 12, align=(image.RIGHT, image.TOP))
     screen.pen = ALERT if bumped else DIM
     screen.text(f"Tilt {heading.tilt:.0f}°", 16, 180, 14)
+    if not robot.settings["level"]:
+        screen.pen = DIM
+        screen.text("Run Calibrate to set level", 110, 180, 14)
 
     screen.pen = DIM
     screen.text(f"A  {'Stop' if state != STOPPED else 'Go'}    X Y  Sensitivity", 12, 216, 14)
