@@ -1,0 +1,156 @@
+#pragma once
+
+#include <cstdlib>
+#include <math.h>
+#include <string.h>
+
+#include "hardware/spi.h"
+#include "hardware/dma.h"
+#include "hardware/gpio.h"
+#include "hardware/pio.h"
+#include "hardware/pwm.h"
+#include "hardware/clocks.h"
+#include "pico/stdlib.h"
+
+#ifndef NO_QSTR
+#include "st7789_parallel.pio.h"
+#endif
+
+#include <algorithm>
+
+
+namespace pimoroni {
+  class ST7789 {
+  private:
+    int width = 160;
+    int height = 120;
+    int fullres_width = 320;
+    int fullres_height = 240;
+    bool fullres_mode = false;
+
+    // interface pins
+    uint cs = 27;
+    uint dc = 28;
+    uint wr_sck = 30;
+    uint rd_sck = 31;
+    uint d0 = 32;
+    uint bl = 26;
+
+    // lowest pwm level at which the backlight lights on all boards
+    static constexpr uint16_t backlight_min = 8192;
+
+    // pio stuff
+    PIO parallel_pio = pio1;
+    uint32_t startup_hz = 0;
+    uint32_t max_pio_clk = 44 * MHZ;
+
+    // Regular commands
+    uint parallel_sm;
+    int parallel_offset;
+    uint st_dma;
+    bool async_enabled = false;
+    volatile bool streaming = false;
+    volatile int stream_col = 0;
+    volatile bool clear_pending = false;
+    uint16_t clear_rgb565 = 0;
+    bool stream_fullres = true;
+    bool stream_mode = false;    // PIO/DMA left in 16-bit linear-stream state
+    bool wire_landscape = false;
+    uint16_t *stream_a = nullptr, *stream_b = nullptr;   // linebuffer halves
+
+    bool rotate_180 = false;
+
+  public:
+    // Parallel init
+    ST7789() {
+      pio_set_gpio_base(parallel_pio, d0 + 8 >= 32 ? 16 : 0);
+
+      parallel_sm = pio_claim_unused_sm(parallel_pio, true);
+      parallel_offset = pio_add_program(parallel_pio, &st7789_parallel_program);
+      if(parallel_offset == -1) {
+        panic("Could not add parallel PIO program.");
+      }
+
+      pio_gpio_init(parallel_pio, wr_sck);
+
+      gpio_set_function(rd_sck,  GPIO_FUNC_SIO);
+      gpio_set_dir(rd_sck, GPIO_OUT);
+
+      for(auto i = 0u; i < 8; i++) {
+        pio_gpio_init(parallel_pio, d0 + i);
+      }
+
+      pio_sm_set_consecutive_pindirs(parallel_pio, parallel_sm, d0, 8, true);
+      pio_sm_set_consecutive_pindirs(parallel_pio, parallel_sm, wr_sck, 1, true);
+
+      pio_sm_config c = st7789_parallel_program_get_default_config(parallel_offset);
+      sm_config_set_out_pins(&c, d0, 8);
+      sm_config_set_sideset_pins(&c, wr_sck);
+      sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+      sm_config_set_out_shift(&c, false, true, 8);
+
+      // Determine clock divider
+      startup_hz = clock_get_hz(clk_sys);
+      sm_config_set_clkdiv(&c, ceil(2.f * fmax(1.0f, float(startup_hz) / max_pio_clk)) * 0.5f);
+
+      pio_sm_init(parallel_pio, parallel_sm, parallel_offset, &c);
+      pio_sm_set_enabled(parallel_pio, parallel_sm, true);
+
+      st_dma = dma_claim_unused_channel(true);
+      configure_dma(true);
+
+      gpio_put(rd_sck, 1);
+
+      init();
+    }
+
+    ~ST7789() {
+      if(dma_channel_is_claimed(st_dma)) {
+        dma_channel_abort(st_dma);
+        dma_channel_unclaim(st_dma);
+      }
+
+      if(pio_sm_is_claimed(parallel_pio, parallel_sm)) {
+        pio_sm_set_enabled(parallel_pio, parallel_sm, false);
+        pio_sm_drain_tx_fifo(parallel_pio, parallel_sm);
+        //pio_sm_unclaim(parallel_pio, parallel_sm);
+        pio_remove_program_and_unclaim_sm(&st7789_parallel_program, parallel_pio, parallel_sm, parallel_offset);
+      }
+    }
+
+    void update();
+    // Asynchronous updates: update() starts the transfer and returns, a DMA
+    // interrupt converts each column behind it, and wait_for_stream() blocks
+    // until the frame is out (picovector's framebuffer fence calls it before
+    // the first draw). Off by default; behaviour is unchanged until enabled.
+    void set_async(bool enabled);
+    bool get_async() { return async_enabled; }
+    void wait_for_stream();
+    // The automatic frame clear, deferred: recorded at update() time and
+    // executed the moment the framebuffer is next writable - inside the fence
+    // once the stream is out, or immediately when updates are synchronous.
+    void deferred_clear(uint8_t r, uint8_t g, uint8_t b);
+    void apply_pending_clear();
+    void set_wire_landscape(bool landscape);
+    void set_pull_threshold(uint8_t bits);
+    void stream_isr();
+    void convert_column(uint16_t *dst, int x, bool fullres);
+    void set_backlight(uint8_t brightness);
+    void set_mode(bool mode);
+    bool get_mode();
+    uint16_t *get_framebuffer();
+    void command(uint8_t command, size_t len = 0, const char *data = NULL);
+    void set_max_pio_clock(uint32_t hz);
+    void set_rotate_180(bool rotate);
+    uint8_t set_framerate(uint8_t fps);
+
+  private:
+    void init();
+    void write_madctl();
+    void configure_dma(bool enable_read_increment = true);
+    inline void wait_for_dma(void);
+    void write_blocking(const uint8_t *src, size_t len);
+    void start_dma(const uint8_t *src, size_t len);
+  };
+
+}

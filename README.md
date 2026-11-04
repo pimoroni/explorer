@@ -27,6 +27,20 @@ There are two choices of firmware:
 
 :warning: If you flash the `with-filesystem` version, the contents of your Explorer board will be erased- so make sure to back up your own code first. Alternatively you can flash the firmware-only build and manually copy the files in [examples/lib](examples/lib)
 
+## PicoVector (Experimental)
+
+`explorer-picovector-vX.X.X-micropython.uf2` swaps PicoGraphics for PicoVector, drawing into an RGB565 framebuffer, with an `explorer` module for the screen, buttons, inputs, outputs, servos and speaker. The `with-filesystem` build includes a menu and apps from [filesystem](filesystem).
+
+| Explorer | `explorer`    |
+|----------|---------------|
+| A        | `SELECT`      |
+| B        | `BACK`        |
+| X        | `UP`          |
+| Y        | `DOWN`        |
+| USER     | `HOME`        |
+
+`button_a` through `button_z` and `button_user` are also available.
+
 # Flashing The Firmware
 
 1. Connect Explorer to your computer with a USB Type-C cable
