@@ -83,7 +83,7 @@ time.sleep(2)
 clear()
 drop_shadow_text(f"Do {SWEEPS} sine sweeps", 10, 75, 3, 320, 3, WHITE)
 display.update()
-for j in range(SWEEPS):
+for _ in range(SWEEPS):
     for i in range(360):
         s.value(math.sin(math.radians(i)) * SWEEP_EXTENT)
         time.sleep(0.02)
@@ -92,11 +92,11 @@ for j in range(SWEEPS):
 clear()
 drop_shadow_text(f"Do {SWEEPS} stepped sweeps", 10, 75, 3, 320, 3, WHITE)
 display.update()
-for j in range(SWEEPS):
-    for i in range(0, STEPS):
+for _ in range(SWEEPS):
+    for i in range(STEPS):
         s.to_percent(i, 0, STEPS, 0.0 - SWEEP_EXTENT, SWEEP_EXTENT)
         time.sleep(STEPS_INTERVAL)
-    for i in range(0, STEPS):
+    for i in range(STEPS):
         s.to_percent(i, STEPS, 0, 0.0 - SWEEP_EXTENT, SWEEP_EXTENT)
         time.sleep(STEPS_INTERVAL)
 

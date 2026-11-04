@@ -1,0 +1,32 @@
+builtins = [
+    "micropython",
+    "const",
+    "ptr8",
+    "ptr32"
+]
+
+lint.select = [
+    "F",
+    "Q",
+    "W",
+    "E",
+    "B",
+    "COM",
+    "BLE",
+    "C4",
+    "ISC",
+    "ICN",
+    "PIE",
+    "RSE",
+    "RET",
+    "SLF",
+    "ARG"
+]
+
+lint.ignore = [
+    "E501",
+    "E402",
+    "COM812",
+    "ICN001",
+    "B905"
+]

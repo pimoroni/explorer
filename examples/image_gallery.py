@@ -28,7 +28,7 @@ display.clear()
 
 # Load images
 try:
-    IMAGES = [f for f in os.listdir("/") if f.endswith(".jpg") or f.endswith(".png")]
+    IMAGES = [f for f in os.listdir("/") if f.endswith((".jpg", ".png"))]
     TOTAL_IMAGES = len(IMAGES)
 except OSError:
     pass

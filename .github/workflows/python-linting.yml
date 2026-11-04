@@ -7,19 +7,26 @@ on:
 jobs:
   build:
     name: Python Linting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+
+    - name: Install Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.13'
 
     - name: Install Python Deps
-      run: python3 -m pip install ruff
+      run: source ci/python.sh && qa_prepare_all
 
     - name: Lint Frozen Modules
       shell: bash
-      run: |
-        python3 -m ruff check --config "builtins = [\"const\"]" --output-format=full --ignore E501 modules/py_frozen
+      run: source ci/python.sh && qa_modules_check
 
     - name: Lint Examples
       shell: bash
-      run: |
-        python3 -m ruff check --config "builtins = [\"const\"]" --output-format=full --ignore E501 examples
+      run: source ci/python.sh && qa_examples_check
+
+    - name: Lint PicoVector Runtime And Filesystem
+      shell: bash
+      run: source ci/python.sh && qa_picovector_check

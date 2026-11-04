@@ -96,7 +96,7 @@ def play_tone(frequency):
         audio_pwm.freq(frequency)
     except ValueError:
         play_silence()
-        raise ValueError("frequency of range. Expected greater than 0")
+        raise ValueError("frequency of range. Expected greater than 0") from None
 
     corrected_volume = (_volume ** 4)  # Correct for RC Filter curve
     audio_pwm.duty_u16(int(32768 * corrected_volume))
@@ -125,6 +125,7 @@ def set_volume(volume=None):
         raise ValueError("volume out of range. Expected 0.0 to 1.0")
 
     _volume = volume
+    return None
 
 
 def mute_audio(value=True):

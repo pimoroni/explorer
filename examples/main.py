@@ -32,8 +32,7 @@ def hsv_to_rgb(h: float, s: float, v: float) -> tuple[float, float, float]:
         return p, q, v
     if i == 4:
         return t, p, v
-    if i == 5:
-        return v, p, q
+    return v, p, q
 
 
 def debounce(button, debounce_ms=200):

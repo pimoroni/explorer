@@ -1,4 +1,4 @@
-'''
+"""
 Maze game for Pimoroni Explorer
 
 Controls:
@@ -7,7 +7,7 @@ DOWN - B
 LEFT - C
 RIGHT - Z
 
-'''
+"""
 
 from explorer import display, BLACK, WHITE, GREEN, button_a, button_b, button_c, button_z
 import time
