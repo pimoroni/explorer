@@ -50,9 +50,9 @@ CHEVRON_RADIUS = 9
 DETAIL_TEXT_LEFT = 48
 DETAIL_TEXT_WIDTH = DETAIL_RIGHT - DETAIL_TEXT_LEFT - 10
 ACTION_RADIUS = 13
-ACTION_ICON_X = 18
+ACTION_WIDTH = 28
+ACTION_ICON_X = ACTION_WIDTH - ACTION_RADIUS
 ACTION_ICON_SIZE = 20
-ACTION_WIDTH = ACTION_ICON_X + 9 + ACTION_RADIUS
 NEEDS_WIDTH = 216
 NEEDS_LINE = 20
 DETAIL_TITLE_Y = 30
@@ -335,8 +335,8 @@ def draw_transition(apps, page, slot, progress):
         chrome_x = CHROME_X + (DETAIL_RIGHT - CARD_RIGHT) * slide
         draw_chevron(ROW_CENTRES[0], True, page > 0, chrome_x)
         draw_scrollbar(page, page_count(apps), chrome_x)
-    draw_action(ROW_BUTTONS[slot].name, "arrow_back", CARD_LEFT, centre, pill)
-    draw_action(button_z.name, "play_arrow", CHROME_X, ROW_CENTRES[2], pill, mirrored=True, from_chevron=True, chevron_enabled=page < page_count(apps) - 1)
+    draw_action(ROW_BUTTONS[slot].name, "arrow_circle_left", CARD_LEFT, centre, pill)
+    draw_action(button_z.name, "play_circle", CHROME_X, ROW_CENTRES[2], pill, mirrored=True, from_chevron=True, chevron_enabled=page < page_count(apps) - 1)
 
 
 def animate(apps, page, slot, forward):

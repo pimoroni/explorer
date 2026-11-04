@@ -12,7 +12,7 @@ BADGEWARE_FONTS = ROOT.parent / "badgeware" / "badgeware-fonts"
 DEFAULT_SYMBOLS = BADGEWARE_FONTS / "roboto-medium-with-material-symbols" / "src" / "MaterialSymbolsSharp_Filled-Regular.ttf"
 DEFAULT_ALRIGHT_FONTS = BADGEWARE_FONTS / "alright-fonts"
 FALLBACK = "apps"
-MENU_ICONS = ("arrow_back", "play_arrow")
+MENU_ICONS = ("arrow_circle_left", "play_circle")
 FLAG_16BIT_POINT_COUNT = 0b0000001
 QUALITY = 5
 
