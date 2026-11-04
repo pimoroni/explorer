@@ -3,7 +3,7 @@ import math
 import time
 
 CALIBRATION_FILE = "/robot.json"
-DEFAULTS = {"balance": 0.0}
+DEFAULTS = {"balance": 0.0, "flip": False, "swapped": False}
 LEFT_SERVO = 1
 RIGHT_SERVO = 2
 GYRO_DPS = 0.00875
@@ -30,8 +30,8 @@ class Robot:
     def __init__(self, explorer, speed=0.6):
         from servo import CONTINUOUS
 
-        self.left_wheel = explorer.servo(LEFT_SERVO, CONTINUOUS)
-        self.right_wheel = explorer.servo(RIGHT_SERVO, CONTINUOUS)
+        self.first_servo = explorer.servo(LEFT_SERVO, CONTINUOUS)
+        self.second_servo = explorer.servo(RIGHT_SERVO, CONTINUOUS)
         self.speed = speed
         self.settings = load()
         self.stop()
@@ -40,12 +40,14 @@ class Robot:
         balance = self.settings["balance"]
         left *= 1 - max(0.0, -balance)
         right *= 1 - max(0.0, balance)
-        self._set(self.left_wheel, left * self.speed)
-        self._set(self.right_wheel, -right * self.speed)
+        sign = -1 if self.settings["flip"] else 1
+        left_wheel, right_wheel = (self.second_servo, self.first_servo) if self.settings["swapped"] else (self.first_servo, self.second_servo)
+        self._set(left_wheel, sign * left * self.speed)
+        self._set(right_wheel, -sign * right * self.speed)
 
     def stop(self):
-        self.left_wheel.disable()
-        self.right_wheel.disable()
+        self.first_servo.disable()
+        self.second_servo.disable()
 
     @staticmethod
     def _set(wheel, value):

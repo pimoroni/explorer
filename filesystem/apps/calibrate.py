@@ -1,15 +1,15 @@
 """Calibrate
-Trim your robot until it drives straight.
+Set up your robot so it drives straight.
 
 You will need:
 - 2 servos with wheels
 - Battery holder
-- Multi-Sensor Stick, for auto trim
+- Multi-Sensor Stick, for auto setup
 
 Icon: tune
 """
 import explorer
-from explorer import DOWN, SELECT, UP, button_c, button_z, screen, stick, wiring
+from explorer import BACK, DOWN, SELECT, UP, button_c, button_z, screen, stick, wiring
 from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, save
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, rect, shape
@@ -26,13 +26,20 @@ FAINT = color.rgb(58, 56, 53)
 ACCENT = color.rgb(52, 199, 138)
 ALERT = color.rgb(255, 122, 61)
 
-RUN_MS = 3000
+SPIN_MS = 1000
+DIRECTION_MS = 1000
+STRAIGHT_MS = 4000
 WARMUP_MS = 400
+SPIN_MIN_DEGREES = 20
 TRIM_STEP = 0.01
-TRIM_LIMIT = 0.3
+TRIM_LIMIT = 0.5
 AUTO_GAIN = 0.004
 AUTO_LIMIT = 0.05
 STRAIGHT_DPS = 0.5
+
+SPIN, DIRECTION, STRAIGHT = range(3)
+TITLES = ("Spin", "Direction", "Drive straight")
+READY, RUNNING, ASK, DONE = range(4)
 
 WIRING = (
     (
@@ -48,101 +55,176 @@ heading = None
 if stick.connected(explorer.i2c()):
     heading = Heading(explorer.sensor(LSM6DS3, TITLE_FONT, on_disconnect=robot.stop))
 
-driving = False
+stage = SPIN
+phase = READY
 run_started = 0
+message = ""
+message_good = True
 drift = None
 drift_total = 0.0
 drift_samples = 0
 
 
-def set_balance(value):
-    robot.settings["balance"] = round(max(-TRIM_LIMIT, min(TRIM_LIMIT, value)), 3)
+def update_setting(name, value):
+    robot.settings[name] = value
     save(robot.settings)
+
+
+def set_balance(value):
+    update_setting("balance", round(max(-TRIM_LIMIT, min(TRIM_LIMIT, value)), 3))
+
+
+def run_ms():
+    return (SPIN_MS, DIRECTION_MS, STRAIGHT_MS)[stage]
+
+
+def start_run():
+    global phase, run_started, drift_total, drift_samples, message
+    robot.stop()
+    if heading is not None:
+        heading.settle()
+    phase = RUNNING
+    message = ""
+    drift_total = 0.0
+    drift_samples = 0
+    run_started = explorer.ticks()
+
+
+def finish_run():
+    global phase, message, message_good, drift
+    robot.stop()
+    if stage == SPIN and heading is not None:
+        turned = heading.heading
+        if abs(turned) < SPIN_MIN_DEGREES:
+            phase, message, message_good = DONE, "It hardly turned. Check the servos and battery, then A to try again.", False
+        elif turned > 0:
+            update_setting("flip", not robot.settings["flip"])
+            phase, message, message_good = DONE, "It spun left, so the servo direction is now flipped. A to check again.", False
+        else:
+            phase, message, message_good = DONE, "Spun right. All good!", True
+    elif stage == STRAIGHT:
+        phase = DONE
+        drift = drift_total / drift_samples if drift_samples else None
+    else:
+        phase = ASK
+
+
+def answer(yes):
+    global stage, phase, message, message_good
+    if yes:
+        stage, phase, message = stage + 1, READY, ""
+        return
+    if stage == SPIN:
+        update_setting("flip", not robot.settings["flip"])
+    else:
+        update_setting("swapped", not robot.settings["swapped"])
+    phase, message, message_good = READY, "Changed. A to check again.", False
 
 
 while True:
     now = explorer.ticks()
-    balance = robot.settings["balance"]
 
-    if SELECT.pressed:
-        robot.stop()
-        if driving:
-            driving = False
-        else:
-            if heading is not None:
-                heading.settle()
-            driving = True
-            drift_total = 0.0
-            drift_samples = 0
-            run_started = explorer.ticks()
-            now = run_started
-    if not driving:
-        if UP.pressed:
-            set_balance(balance - TRIM_STEP)
-        if DOWN.pressed:
-            set_balance(balance + TRIM_STEP)
-        if button_c.pressed:
-            set_balance(0.0)
-        if button_z.pressed and drift is not None:
-            set_balance(balance + max(-AUTO_LIMIT, min(AUTO_LIMIT, drift * AUTO_GAIN)))
-            drift = None
-
-    if driving:
+    if phase == RUNNING:
         if heading is not None:
             heading.update()
             if now - run_started >= WARMUP_MS:
                 drift_total += heading.rate
                 drift_samples += 1
-        if now - run_started >= RUN_MS:
-            driving = False
-            robot.stop()
-            if drift_samples:
-                drift = drift_total / drift_samples
+        if SELECT.pressed or now - run_started >= run_ms():
+            finish_run()
+        elif stage == SPIN:
+            robot.drive(1, -1)
         else:
             robot.drive(1, 1)
+    elif phase == ASK:
+        if SELECT.pressed:
+            answer(True)
+        elif UP.pressed:
+            answer(False)
+    else:
+        if SELECT.pressed:
+            start_run()
+        if button_c.pressed and stage > SPIN:
+            stage, phase, message = stage - 1, READY, ""
+        if button_z.pressed and stage < STRAIGHT:
+            stage, phase, message = stage + 1, READY, ""
+        if stage == STRAIGHT:
+            if UP.pressed:
+                set_balance(robot.settings["balance"] - TRIM_STEP)
+            if DOWN.pressed:
+                set_balance(robot.settings["balance"] + TRIM_STEP)
+            if BACK.pressed and drift is not None:
+                set_balance(robot.settings["balance"] + max(-AUTO_LIMIT, min(AUTO_LIMIT, drift * AUTO_GAIN)))
+                drift = None
 
     screen.pen = INK
     screen.clear()
 
-    screen.font = TITLE_FONT
-    screen.pen = PAPER
-    screen.text("Drive straight", 16, 12, 26)
     screen.font = BODY_FONT
     screen.pen = DIM
-    screen.text("Put the robot on the floor with room ahead. A drives for 3 seconds.", rect(16, 44, 288, 40), 14)
-
-    balance = robot.settings["balance"]
-    centre = 160
-    span = 140
-    screen.pen = FAINT
-    screen.shape(shape.rounded_rectangle(centre - span, 100, span * 2, 14, 7))
-    screen.pen = PAPER
-    screen.shape(shape.rectangle(centre - 1, 94, 2, 26))
-    screen.pen = ACCENT
-    screen.shape(shape.circle(centre + span * balance / TRIM_LIMIT, 107, 10))
-    screen.pen = DIM
-    screen.text("left", 20, 122, 12)
-    screen.text("right", rect(20, 122, 280, 14), 12, align=(image.RIGHT, image.TOP))
+    screen.text(f"Step {stage + 1} of 3", 16, 8, 13)
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(f"Trim {balance * 100:+.0f}", rect(0, 136, 320, 26), 20, align=(image.CENTER, image.MIDDLE))
+    screen.text(TITLES[stage], 16, 22, 26)
 
+    if stage == SPIN:
+        instructions = "Put the robot on the floor. A spins it on the spot for a second."
+        question = "Did it spin right (clockwise)?"
+    elif stage == DIRECTION:
+        instructions = "Room ahead of the robot? A drives it for a second."
+        question = "Did it drive forwards?"
+    else:
+        instructions = "Room ahead of the robot? A drives it for 4 seconds."
+        question = ""
     screen.font = BODY_FONT
-    if driving:
+    screen.pen = DIM
+    screen.text(instructions, rect(16, 56, 288, 40), 14)
+
+    if stage == STRAIGHT:
+        balance = robot.settings["balance"]
+        centre = 160
+        span = 140
+        screen.pen = FAINT
+        screen.shape(shape.rounded_rectangle(centre - span, 104, span * 2, 14, 7))
+        screen.pen = PAPER
+        screen.shape(shape.rectangle(centre - 1, 98, 2, 26))
         screen.pen = ACCENT
-        screen.text("Driving...", rect(0, 166, 320, 20), 16, align=(image.CENTER, image.MIDDLE))
-    elif drift is not None:
-        if abs(drift) < STRAIGHT_DPS:
-            message = "Straight!"
-        else:
-            message = f"Veered {'left' if drift > 0 else 'right'} {abs(drift):.1f} deg/s.  Z  Fix it"
-        screen.pen = ACCENT if abs(drift) < STRAIGHT_DPS else ALERT
-        screen.text(message, rect(0, 166, 320, 20), 16, align=(image.CENTER, image.MIDDLE))
-    elif heading is None:
+        screen.shape(shape.circle(centre + span * balance / TRIM_LIMIT, 111, 10))
         screen.pen = DIM
-        screen.text("Plug in the sensor stick for auto trim", rect(0, 166, 320, 20), 13, align=(image.CENTER, image.MIDDLE))
+        screen.text("left", 20, 126, 12)
+        screen.text("right", rect(20, 126, 280, 14), 12, align=(image.RIGHT, image.TOP))
+        screen.font = TITLE_FONT
+        screen.pen = PAPER
+        screen.text(f"Trim {balance * 100:+.0f}", rect(0, 140, 320, 26), 20, align=(image.CENTER, image.MIDDLE))
+
+    screen.font = BODY_FONT
+    if phase == RUNNING:
+        screen.pen = ACCENT
+        screen.text("Running...", rect(16, 168, 288, 20), 16)
+    elif phase == ASK:
+        screen.pen = PAPER
+        screen.text(question, rect(16, 120, 288, 24), 18)
+        screen.pen = DIM
+        screen.text("A  Yes    X  No", rect(16, 150, 288, 20), 16)
+    elif stage == STRAIGHT and phase == DONE and drift is not None:
+        straight = abs(drift) < STRAIGHT_DPS
+        screen.pen = ACCENT if straight else ALERT
+        text = "Straight!" if straight else f"Veered {'left' if drift > 0 else 'right'} {abs(drift):.1f} deg/s.  B  Fix it"
+        screen.text(text, rect(16, 168, 288, 20), 15)
+    elif message:
+        screen.pen = ACCENT if message_good else ALERT
+        screen.text(message, rect(16, 120, 288, 44), 15)
+    elif stage == STRAIGHT and heading is None:
+        screen.pen = DIM
+        screen.text("Plug in the sensor stick for auto trim", rect(16, 168, 288, 20), 13)
 
     screen.pen = DIM
-    screen.text("A  Drive    X Y  Steer left / right    C  Reset", 12, 214, 13)
+    if phase == ASK:
+        hint = ""
+    elif stage == STRAIGHT:
+        hint = "A  Drive   X Y  Steer left / right   C  Back"
+    else:
+        hint = "A  Test    C Z  Previous / next step"
+    screen.text(hint, 12, 214, 13)
 
     explorer.update()
