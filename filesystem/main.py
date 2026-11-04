@@ -47,8 +47,13 @@ MOVE_EASE = tween(0.0, 1.0, easing=tween.CUBIC_OUT)
 PILL_DELAY = 0.25
 CHROME_X = 309
 CHEVRON_RADIUS = 9
-DETAIL_TEXT_LEFT = 84
+DETAIL_TEXT_LEFT = 48
 DETAIL_TEXT_WIDTH = DETAIL_RIGHT - DETAIL_TEXT_LEFT - 10
+ACTION_RADIUS = 13
+ACTION_ICON_X = 18
+ACTION_WIDTH = ACTION_ICON_X + 9 + ACTION_RADIUS
+NEEDS_WIDTH = 216
+NEEDS_LINE = 20
 DETAIL_TITLE_Y = 30
 DETAIL_ICON_X = DETAIL_RIGHT - DETAIL_ICON_SIZE / 2 - 16
 DETAIL_ICON_Y = DETAIL_TOP + DETAIL_ICON_SIZE / 2 + 12
@@ -220,35 +225,56 @@ def draw_list(apps, page):
     draw_chrome(page, page_count(apps))
 
 
-def draw_action(letter, label, x, y, t, mirrored=False, from_chevron=False, chevron_enabled=True):
+def draw_action(letter, icon, x, y, t, mirrored=False, from_chevron=False, chevron_enabled=True):
     if from_chevron and t <= 0:
         draw_chevron(y, False, chevron_enabled, x)
         return
-    screen.font = TITLE_FONT
-    label_width = screen.measure_text(label, font_size=13)[0]
-    radius = BADGE_RADIUS
-    if from_chevron:
-        radius = CHEVRON_RADIUS + (BADGE_RADIUS - CHEVRON_RADIUS) * min(1.0, t * 2)
-    width = radius * 2 + (label_width + 12) * t
-    reveal = min(1.0, max(0.0, t * 2 - 1))
+    start_radius = CHEVRON_RADIUS if from_chevron else BADGE_RADIUS
+    grow = min(1.0, max(0.0, t))
+    radius = start_radius + (ACTION_RADIUS - start_radius) * grow
     if mirrored:
-        left = x + radius - width
-        divider = x - radius + 3
-        label_x = divider - 6 - label_width
+        end_left, end_right = explorer.WIDTH - ACTION_WIDTH, explorer.WIDTH + ACTION_RADIUS
+        end_x = explorer.WIDTH - ACTION_ICON_X
     else:
-        left = x - radius
-        divider = x + radius - 3
-        label_x = divider + 6
+        end_left, end_right = -ACTION_RADIUS, ACTION_WIDTH
+        end_x = ACTION_ICON_X
+    left = x - start_radius + (end_left - x + start_radius) * t
+    right = x + start_radius + (end_right - x - start_radius) * t
+    centre_x = x + (end_x - x) * t
 
     screen.pen = CHROME
-    screen.shape(shape.rounded_rectangle(left, y - radius, width, radius * 2, radius))
-    screen.pen = INK
-    text_at_caps(letter, x, y, 13, centred=True)
-    if reveal > 0:
-        screen.pen = color.rgb(31, 29, 27, int(70 * reveal))
-        screen.shape(shape.line(divider, y - 5, divider, y + 5, 1.5))
-        screen.pen = color.rgb(31, 29, 27, int(255 * reveal))
-        text_at_caps(label, label_x, y, 13)
+    screen.shape(shape.rounded_rectangle(left, y - radius, right - left, radius * 2, radius))
+    fade_out = max(0.0, 1 - grow * 2)
+    fade_in = min(1.0, max(0.0, grow * 2 - 1))
+    if fade_out > 0:
+        screen.font = TITLE_FONT
+        screen.pen = color.rgb(31, 29, 27, int(255 * fade_out))
+        if from_chevron:
+            screen.shape(shape.custom(array("f", (centre_x - 4, y - 2, centre_x, y + 3, centre_x + 4, y - 2))).stroke(2, STROKE))
+        else:
+            text_at_caps(letter, centre_x, y, 13, centred=True)
+    if fade_in > 0:
+        screen.pen = color.rgb(31, 29, 27, int(255 * fade_in))
+        if icon == "back":
+            screen.shape(shape.custom(array("f", (centre_x + 6, y, centre_x - 6, y))).stroke(2.5, STROKE))
+            screen.shape(shape.custom(array("f", (centre_x - 1, y - 5, centre_x - 6, y, centre_x - 1, y + 5))).stroke(2.5, STROKE))
+        else:
+            screen.shape(shape.custom(array("f", (centre_x - 4, y - 7, centre_x + 6, y, centre_x - 4, y + 7))))
+
+
+def wrap_text(text, width, size):
+    lines = []
+    line = ""
+    for word in text.split():
+        candidate = f"{line} {word}" if line else word
+        if line and screen.measure_text(candidate, font_size=size)[0] > width:
+            lines.append(line)
+            line = word
+        else:
+            line = candidate
+    if line:
+        lines.append(line)
+    return lines
 
 
 def draw_detail_text(app, alpha):
@@ -260,12 +286,17 @@ def draw_detail_text(app, alpha):
     screen.text(app.description, rect(DETAIL_TEXT_LEFT, DETAIL_DESCRIPTION_Y, DETAIL_TEXT_WIDTH, 48), 16)
     if app.needs:
         screen.font = TITLE_FONT
-        screen.text("Needs", DETAIL_TEXT_LEFT, 128, 16)
+        screen.text("You will need", DETAIL_TEXT_LEFT, 128, 16)
         screen.font = BODY_FONT
-        for line, item in enumerate(app.needs[:4]):
-            y = 152 + line * 20
+        y = 152
+        for item in app.needs:
+            lines = wrap_text(item, NEEDS_WIDTH, 16)
+            if y + len(lines) * NEEDS_LINE > DETAIL_BOTTOM:
+                break
             screen.shape(shape.circle(DETAIL_TEXT_LEFT + 4, y + 9, 3))
-            screen.text(item, DETAIL_TEXT_LEFT + 14, y, 16)
+            for line in lines:
+                screen.text(line, DETAIL_TEXT_LEFT + 14, y, 16)
+                y += NEEDS_LINE
 
 
 def draw_transition(apps, page, slot, progress):
@@ -306,8 +337,8 @@ def draw_transition(apps, page, slot, progress):
         chrome_x = CHROME_X + (DETAIL_RIGHT - CARD_RIGHT) * slide
         draw_chevron(ROW_CENTRES[0], True, page > 0, chrome_x)
         draw_scrollbar(page, page_count(apps), chrome_x)
-    draw_action(ROW_BUTTONS[slot].name, "Close", CARD_LEFT, centre, pill)
-    draw_action(button_z.name, "Start", CHROME_X, ROW_CENTRES[2], pill, mirrored=True, from_chevron=True, chevron_enabled=page < page_count(apps) - 1)
+    draw_action(ROW_BUTTONS[slot].name, "back", CARD_LEFT, centre, pill)
+    draw_action(button_z.name, "play", CHROME_X, ROW_CENTRES[2], pill, mirrored=True, from_chevron=True, chevron_enabled=page < page_count(apps) - 1)
 
 
 def animate(apps, page, slot, forward):
