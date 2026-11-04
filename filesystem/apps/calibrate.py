@@ -9,7 +9,7 @@ You will need:
 Icon: tune
 """
 import explorer
-from explorer import BACK, DOWN, SELECT, UP, button_c, button_z, screen, stick, wiring
+from explorer import BACK, DOWN, SELECT, UP, button_c, button_z, labels, screen, stick, wiring
 from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, hands_off, save
 from lsm6ds3 import LSM6DS3
 from picovector import color, font, image, rect, shape
@@ -166,71 +166,73 @@ while True:
     screen.pen = INK
     screen.clear()
 
-    screen.font = BODY_FONT
-    screen.pen = DIM
-    screen.text(f"Step {stage + 1} of 3", 16, 8, 13)
     screen.font = TITLE_FONT
     screen.pen = PAPER
-    screen.text(TITLES[stage], 16, 22, 26)
+    screen.text(TITLES[stage], 12, 2, 24)
+    screen.font = BODY_FONT
+    screen.pen = DIM
+    screen.text(f"Step {stage + 1} of 3", rect(0, 8, 308, 20), 16, align=(image.RIGHT, image.TOP))
 
     if stage == SPIN:
-        instructions = "Put the robot on a flat floor. A spins it on the spot for a second."
-        question = "Did it spin right (clockwise)?"
+        instructions = "Robot on a flat floor. It spins on the spot for a second."
+        question = "Did it spin right?"
     elif stage == DIRECTION:
-        instructions = "Room ahead of the robot? A drives it for a second."
+        instructions = "Room ahead? It drives for a second."
         question = "Did it drive forwards?"
     else:
-        instructions = "Room ahead of the robot? A drives it for 4 seconds."
+        instructions = "Room ahead? It drives for 4 seconds."
         question = ""
-    screen.font = BODY_FONT
-    screen.pen = DIM
-    screen.text(instructions, rect(16, 56, 288, 40), 14)
+    screen.text(instructions, rect(12, 64, 296, 42), 17)
 
+    actions = {}
     if stage == STRAIGHT:
         balance = robot.settings["balance"]
-        centre = 160
-        span = 140
+        span = 100
         screen.pen = FAINT
-        screen.shape(shape.rounded_rectangle(centre - span, 104, span * 2, 14, 7))
+        screen.shape(shape.rounded_rectangle(160 - span, 150, span * 2, 12, 6))
         screen.pen = PAPER
-        screen.shape(shape.rectangle(centre - 1, 98, 2, 26))
+        screen.shape(shape.rectangle(159, 144, 2, 24))
         screen.pen = ACCENT
-        screen.shape(shape.circle(centre + span * balance / TRIM_LIMIT, 111, 10))
-        screen.pen = DIM
-        screen.text("left", 20, 126, 12)
-        screen.text("right", rect(20, 126, 280, 14), 12, align=(image.RIGHT, image.TOP))
+        screen.shape(shape.circle(160 + span * balance / TRIM_LIMIT, 156, 10))
         screen.font = TITLE_FONT
         screen.pen = PAPER
-        screen.text(f"Trim {balance * 100:+.0f}", rect(0, 140, 320, 26), 20, align=(image.CENTER, image.MIDDLE))
+        screen.text(f"Trim {balance * 100:+.0f}", rect(80, 106, 160, 28), 22, align=(image.CENTER, image.MIDDLE))
 
     screen.font = BODY_FONT
+    status = ""
+    status_pen = DIM
     if phase == RUNNING:
-        screen.pen = ACCENT
-        screen.text("Running...", rect(16, 168, 288, 20), 16)
+        status, status_pen = "Running...", ACCENT
+        actions = {"A": "Stop"}
     elif phase == ASK:
+        screen.font = TITLE_FONT
         screen.pen = PAPER
-        screen.text(question, rect(16, 120, 288, 24), 18)
-        screen.pen = DIM
-        screen.text("A  Yes    X  No", rect(16, 150, 288, 20), 16)
-    elif stage == STRAIGHT and phase == DONE and drift is not None:
-        straight = abs(veer()) < STRAIGHT_DEGREES
-        screen.pen = ACCENT if straight else ALERT
-        text = "Straight enough!" if straight else f"Veered {'left' if drift > 0 else 'right'} {abs(veer()):.0f} degrees.  B  Fix it"
-        screen.text(text, rect(16, 168, 288, 20), 15)
-    elif message:
-        screen.pen = ACCENT if message_good else ALERT
-        screen.text(message, rect(16, 120, 288, 44), 15)
-    elif stage == STRAIGHT and heading is None:
-        screen.pen = DIM
-        screen.text("Plug in the sensor stick for auto trim", rect(16, 168, 288, 20), 13)
-
-    screen.pen = DIM
-    if phase == ASK:
-        hint = ""
-    elif stage == STRAIGHT:
-        hint = "A  Drive   X Y  Steer left / right   C  Back"
+        screen.text(question, rect(12, 134, 296, 36), 22, align=(image.CENTER, image.MIDDLE))
+        actions = {"A": "Yes", "X": "No"}
     else:
-        hint = "A  Test    C Z  Previous / next step"
-    screen.text(hint, 12, 214, 13)
+        actions = {"A": "Drive" if stage else "Spin"}
+        if stage > SPIN:
+            actions["C"] = "Back"
+        if stage < STRAIGHT:
+            actions["Z"] = "Next"
+        if stage == STRAIGHT:
+            actions["X"] = "Left"
+            actions["Y"] = "Right"
+            if phase == DONE and drift is not None:
+                straight = abs(veer()) < STRAIGHT_DEGREES
+                status = "Straight enough!" if straight else f"Veered {'left' if drift > 0 else 'right'} {abs(veer()):.0f} degrees"
+                status_pen = ACCENT if straight else ALERT
+                if not straight:
+                    actions["B"] = "Fix"
+            elif heading is None:
+                status = "Plug in the sensor stick for auto trim"
+        elif message:
+            status, status_pen = message, ACCENT if message_good else ALERT
+    if status:
+        screen.font = BODY_FONT
+        screen.pen = status_pen
+        screen.text(status, rect(12, 208, 296, 32) if stage == STRAIGHT or phase == RUNNING else rect(12, 128, 296, 44), 17, align=(image.CENTER, image.MIDDLE))
+
+    labels.draw(screen, TITLE_FONT, actions)
 
     explorer.update()
