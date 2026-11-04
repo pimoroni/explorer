@@ -88,15 +88,15 @@ while True:
     screen.text(f"{sum_text} = {count}", rect(0, 64, 320, 36), 26, align=(image.CENTER, image.MIDDLE))
 
     for index, (value, on, pen) in enumerate(zip(VALUES, bits, BULB_COLOURS)):
-        x = 40 + index * 60
+        x = 64 + index * 48
         screen.pen = pen if on else FAINT
-        screen.shape(shape.circle(x, 155, 20))
+        screen.shape(shape.circle(x, 158, 18))
         screen.font = TITLE_FONT
         screen.pen = INK if on else DIM
-        screen.text("1" if on else "0", rect(x - 20, 143, 40, 24), 22, align=(image.CENTER, image.MIDDLE))
+        screen.text("1" if on else "0", rect(x - 18, 146, 36, 24), 20, align=(image.CENTER, image.MIDDLE))
         screen.font = BODY_FONT
         screen.pen = DIM
-        screen.text(str(value), rect(x - 20, 180, 40, 22), 18, align=(image.CENTER, image.MIDDLE))
+        screen.text(str(value), rect(x - 20, 182, 40, 22), 18, align=(image.CENTER, image.MIDDLE))
 
     labels.draw(screen, TITLE_FONT, {"A": "+1", "B": "Reset", "X": "Auto on" if auto else "Auto off", "Y": "Wiring"}, "A")
 

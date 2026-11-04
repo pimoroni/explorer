@@ -42,6 +42,8 @@ TURN_TIMEOUT_MS = 2500
 PROXIMITY_MAX = 400
 THRESHOLD_STEP = 10
 TILT_LIMIT = 8
+TILT_IGNORE_MS = 600
+TILT_HOLD_MS = 250
 
 WIRING = (
     (
@@ -68,6 +70,7 @@ threshold = 40
 proximity = 0
 dodges = 0
 reason = ""
+tilting_since = None
 
 while True:
     now = explorer.ticks()
@@ -84,12 +87,19 @@ while True:
         robot.stop()
         if state == STOPPED:
             hands_off(explorer, TITLE_FONT, heading)
-            state = DRIVING
+            state, state_started = DRIVING, explorer.ticks()
         else:
             state = STOPPED
 
     seen = proximity > threshold
-    bumped = heading.tilt > TILT_LIMIT
+    tilted = heading.tilt > TILT_LIMIT
+    bumped = False
+    if state == DRIVING and tilted and now - state_started >= TILT_IGNORE_MS:
+        if tilting_since is None:
+            tilting_since = now
+        bumped = now - tilting_since >= TILT_HOLD_MS
+    else:
+        tilting_since = None
     if state == DRIVING and (seen or bumped):
         state, state_started = BACKING, now
         reason = "Bumped!" if bumped else "Spotted something"
@@ -101,7 +111,7 @@ while True:
         turn_from = heading.heading
         state, state_started = TURNING, now
     elif state == TURNING and (abs(heading.heading - turn_from) >= turn_angle or now - state_started >= TURN_TIMEOUT_MS):
-        state = DRIVING
+        state, state_started = DRIVING, now
 
     if state == DRIVING:
         robot.drive(1, 1)
@@ -136,7 +146,7 @@ while True:
     screen.text("Reacts at", 12, 110, 16)
     screen.text("Far", 16, 160, 14)
     screen.text("Near", rect(16, 160, 288, 16), 14, align=(image.RIGHT, image.TOP))
-    screen.pen = ALERT if bumped else DIM
+    screen.pen = ALERT if tilted else DIM
     screen.text(f"Tilt {heading.tilt:.0f}°", 12, 182, 16)
     if not robot.settings["level"]:
         screen.pen = DIM
