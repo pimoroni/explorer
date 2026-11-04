@@ -7,6 +7,7 @@ brightness_6 e3ab
 calculate ea5f
 casino eb40
 cell_tower ebba
+change_circle e2e7
 device_thermostat e1ff
 directions_walk e536
 flag f0c6
@@ -18,6 +19,7 @@ music_note e405
 nightlight f03d
 palette e40a
 partly_cloudy_day f172
+pause_circle e1a2
 play_circle e1c4
 psychology ea4a
 route eacd

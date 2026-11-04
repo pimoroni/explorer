@@ -103,6 +103,6 @@ while True:
         screen.pen = DIM
         screen.text(str(value), rect(x - 20, 182, 40, 22), 18, align=(image.CENTER, image.MIDDLE))
 
-    labels.draw(screen, TITLE_FONT, {"A": "+1", "B": "Reset", "X": "Auto on" if auto else "Auto off", "Y": "Wiring"}, "A")
+    labels.draw(screen, TITLE_FONT, {"A": "+1", "B": labels.Icon("change_circle"), "X": labels.Icon("pause_circle" if auto else "play_circle"), "Y": "Wiring"}, "A")
 
     explorer.update()
