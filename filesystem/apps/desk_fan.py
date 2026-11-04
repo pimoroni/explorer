@@ -95,6 +95,6 @@ while True:
     screen.pen = DIM
     screen.text("Always on" if always_on else f"Starts at {start_temperature:.1f}°C", rect(176, 182, 136, 20), 16)
 
-    labels.draw(screen, TITLE_FONT, {"A": "Auto" if always_on else "Always on", "X": "Warmer", "Y": "Cooler"})
+    labels.draw(screen, TITLE_FONT, {"A": "Auto" if always_on else "Always on", "X": labels.UP, "Y": labels.DOWN})
 
     explorer.update()

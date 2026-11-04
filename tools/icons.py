@@ -12,13 +12,13 @@ BADGEWARE_FONTS = ROOT.parent / "badgeware" / "badgeware-fonts"
 DEFAULT_SYMBOLS = BADGEWARE_FONTS / "roboto-medium-with-material-symbols" / "src" / "MaterialSymbolsSharp_Filled-Regular.ttf"
 DEFAULT_ALRIGHT_FONTS = BADGEWARE_FONTS / "alright-fonts"
 FALLBACK = "apps"
-MENU_ICONS = ("arrow_circle_left", "play_circle")
+UI_ICONS = ("arrow_circle_left", "arrow_circle_right", "arrow_circle_up", "arrow_circle_down", "lightbulb_circle", "play_circle")
 FLAG_16BIT_POINT_COUNT = 0b0000001
 QUALITY = 5
 
 
 def icon_names():
-    names = {FALLBACK, *MENU_ICONS}
+    names = {FALLBACK, *UI_ICONS}
     for path in sorted(APPS.glob("*.py")):
         for line in path.read_text().splitlines()[:20]:
             if line.startswith("Icon:"):

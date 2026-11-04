@@ -252,10 +252,10 @@ while True:
         if program:
             actions["A"] = "Go"
             actions["B"] = "Undo"
-        actions["C"] = "Left"
-        actions["Z"] = "Right"
+        actions["C"] = labels.LEFT
+        actions["Z"] = labels.RIGHT
         if len(program) < MAX_MOVES:
-            actions["X"] = "Forward"
+            actions["X"] = labels.UP
     labels.draw(screen, TITLE_FONT, actions, None if running else "A")
 
     explorer.update()

@@ -110,13 +110,13 @@ while True:
     if speeds[0] or speeds[1]:
         actions["B"] = "Stop"
     if choice != LEFT:
-        actions["C"] = "Left"
+        actions["C"] = labels.LEFT
     if any(speeds[index] < 1.0 for index in selected):
-        actions["X"] = "Faster"
+        actions["X"] = labels.UP
     if any(speeds[index] > -1.0 for index in selected):
-        actions["Y"] = "Slower"
+        actions["Y"] = labels.DOWN
     if choice != RIGHT:
-        actions["Z"] = "Right"
+        actions["Z"] = labels.RIGHT
     labels.draw(screen, TITLE_FONT, actions)
 
     explorer.update()

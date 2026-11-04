@@ -25,8 +25,15 @@ _icon_codes = {}
 
 
 class Icon:
-    def __init__(self, name):
+    def __init__(self, name, highlighted=False):
         self.name = name
+        self.highlighted = highlighted
+
+
+LEFT = Icon("arrow_circle_left")
+RIGHT = Icon("arrow_circle_right")
+UP = Icon("arrow_circle_up")
+DOWN = Icon("arrow_circle_down")
 
 
 def _load_icons():
@@ -79,7 +86,7 @@ def draw(screen, title_font, actions, highlight=None):
     screen.font = title_font
     for letter, label in actions.items():
         if isinstance(label, Icon):
-            icon_pill(screen, letter, label.name, letter == highlight)
+            icon_pill(screen, letter, label.name, label.highlighted or letter == highlight)
         else:
             pill(screen, letter, label, letter == highlight)
     screen.font = previous_font

@@ -154,6 +154,6 @@ while True:
     screen.pen = DIM
     screen.text(f"{red} {green} {blue}", rect(150, 136, 116, 22), 16, align=(image.CENTER, image.MIDDLE))
 
-    labels.draw(screen, TITLE_FONT, {"C": "Left", "X": "More", "Y": "Less", "Z": "Right"})
+    labels.draw(screen, TITLE_FONT, {"C": labels.LEFT, "X": labels.UP, "Y": labels.DOWN, "Z": labels.RIGHT})
 
     explorer.update()

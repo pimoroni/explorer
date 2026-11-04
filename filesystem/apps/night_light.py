@@ -98,6 +98,6 @@ while True:
     screen.pen = DIM
     screen.text("LED GP0", rect(0, 218, 320, 16), 14, align=(image.CENTER, image.TOP))
 
-    labels.draw(screen, TITLE_FONT, {"X": "Higher", "Y": "Lower"})
+    labels.draw(screen, TITLE_FONT, {"X": labels.UP, "Y": labels.DOWN})
 
     explorer.update()

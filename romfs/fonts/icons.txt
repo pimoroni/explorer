@@ -1,5 +1,8 @@
 apps e5c3
+arrow_circle_down f181
 arrow_circle_left eaa7
+arrow_circle_right eaaa
+arrow_circle_up f182
 brightness_6 e3ab
 calculate ea5f
 casino eb40
@@ -9,6 +12,7 @@ directions_walk e536
 flag f0c6
 join f84f
 lightbulb e90f
+lightbulb_circle ebfe
 mode_fan f168
 music_note e405
 nightlight f03d

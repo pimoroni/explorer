@@ -227,8 +227,8 @@ while True:
                     highlight = "X"
         else:
             actions["X"] = "Done"
-            actions["C"] = "Left"
-            actions["Z"] = "Right"
+            actions["C"] = labels.LEFT
+            actions["Z"] = labels.RIGHT
             if phase == DONE and drift is not None:
                 straight = abs(veer()) < STRAIGHT_DEGREES
                 status = "Straight enough!" if straight else f"Veered {'left' if drift > 0 else 'right'} {abs(veer()):.0f} degrees"

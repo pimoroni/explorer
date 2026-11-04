@@ -121,12 +121,12 @@ while True:
         screen.text(mode, rect(x - 18, TRACK_TOP + TRACK_HEIGHT + 30, 36, 18), 14, align=(image.CENTER, image.MIDDLE))
 
     actions = {
-        "A": "Off" if lit[selected] else "On",
+        "A": labels.Icon("lightbulb_circle", lit[selected]),
         "B": "Dim" if blinking[selected] else "Blink",
-        "C": "Left",
-        "X": "Up",
-        "Y": "Down",
-        "Z": "Right",
+        "C": labels.LEFT,
+        "X": labels.UP,
+        "Y": labels.DOWN,
+        "Z": labels.RIGHT,
     }
     labels.draw(screen, TITLE_FONT, actions)
 
