@@ -8,6 +8,8 @@ You will need:
 
 Icon: tune
 """
+import machine
+
 import explorer
 from explorer import BACK, DOWN, SELECT, UP, button_c, button_z, labels, screen, stick, wiring
 from explorer.robot import LEFT_SERVO, RIGHT_SERVO, Heading, Robot, hands_off, save
@@ -102,10 +104,10 @@ def finish_run():
     if stage == SPIN and heading is not None:
         turned = heading.heading
         if abs(turned) < SPIN_MIN_DEGREES:
-            phase, message, message_good = DONE, "It hardly turned. Check the servos and battery, then A to try again.", False
+            phase, message, message_good = DONE, "It hardly turned. Check the servos and battery.", False
         elif turned > 0:
             update_setting("flip", not robot.settings["flip"])
-            phase, message, message_good = DONE, "It spun left, so the servo direction is now flipped. A to check again.", False
+            phase, message, message_good = DONE, "It spun left, so the servo direction is now flipped. Spin again to check.", False
         else:
             phase, message, message_good = DONE, "Spun right. All good!", True
     elif stage == STRAIGHT:
@@ -124,7 +126,7 @@ def answer(yes):
         update_setting("flip", not robot.settings["flip"])
     else:
         update_setting("swapped", not robot.settings["swapped"])
-    phase, message, message_good = READY, "Changed. A to check again.", False
+    phase, message, message_good = READY, "Changed. Try again to check.", False
 
 
 while True:
@@ -145,21 +147,25 @@ while True:
     elif phase == ASK:
         if SELECT.pressed:
             answer(True)
-        elif UP.pressed:
+        elif BACK.pressed:
             answer(False)
     else:
+        veered = stage == STRAIGHT and phase == DONE and drift is not None and abs(veer()) >= STRAIGHT_DEGREES
         if SELECT.pressed:
             start_run()
-        if button_c.pressed and stage > SPIN:
+        elif BACK.pressed and stage > SPIN:
             stage, phase, message = stage - 1, READY, ""
-        if button_z.pressed and stage < STRAIGHT:
+        elif UP.pressed:
+            if stage == STRAIGHT:
+                robot.stop()
+                machine.reset()
             stage, phase, message = stage + 1, READY, ""
-        if stage == STRAIGHT:
-            if UP.pressed:
+        elif stage == STRAIGHT:
+            if button_c.pressed:
                 set_balance(robot.settings["balance"] - TRIM_STEP)
-            if DOWN.pressed:
+            if button_z.pressed:
                 set_balance(robot.settings["balance"] + TRIM_STEP)
-            if BACK.pressed and drift is not None and abs(veer()) >= STRAIGHT_DEGREES:
+            if DOWN.pressed and veered:
                 set_balance(robot.settings["balance"] + max(-AUTO_LIMIT, min(AUTO_LIMIT, drift * AUTO_GAIN)))
                 drift = None
 
@@ -184,7 +190,6 @@ while True:
         question = ""
     screen.text(instructions, rect(12, 64, 296, 42), 17)
 
-    actions = {}
     if stage == STRAIGHT:
         balance = robot.settings["balance"]
         span = 100
@@ -198,9 +203,9 @@ while True:
         screen.pen = PAPER
         screen.text(f"Trim {balance * 100:+.0f}", rect(80, 106, 160, 28), 22, align=(image.CENTER, image.MIDDLE))
 
-    screen.font = BODY_FONT
     status = ""
     status_pen = DIM
+    highlight = None
     if phase == RUNNING:
         status, status_pen = "Running...", ACCENT
         actions = {"A": "Stop"}
@@ -208,31 +213,38 @@ while True:
         screen.font = TITLE_FONT
         screen.pen = PAPER
         screen.text(question, rect(12, 134, 296, 36), 22, align=(image.CENTER, image.MIDDLE))
-        actions = {"A": "Yes", "X": "No"}
+        actions = {"A": "Yes", "B": "No"}
     else:
         actions = {"A": "Drive" if stage else "Spin"}
+        highlight = "A"
         if stage > SPIN:
-            actions["C"] = "Back"
+            actions["B"] = "Back"
         if stage < STRAIGHT:
-            actions["Z"] = "Next"
-        if stage == STRAIGHT:
-            actions["X"] = "Left"
-            actions["Y"] = "Right"
+            actions["X"] = "Next"
+            if message:
+                status, status_pen = message, ACCENT if message_good else ALERT
+                if message_good:
+                    highlight = "X"
+        else:
+            actions["X"] = "Done"
+            actions["C"] = "Left"
+            actions["Z"] = "Right"
             if phase == DONE and drift is not None:
                 straight = abs(veer()) < STRAIGHT_DEGREES
                 status = "Straight enough!" if straight else f"Veered {'left' if drift > 0 else 'right'} {abs(veer()):.0f} degrees"
                 status_pen = ACCENT if straight else ALERT
-                if not straight:
-                    actions["B"] = "Fix"
+                if straight:
+                    highlight = "X"
+                else:
+                    actions["Y"] = "Fix"
+                    highlight = "Y"
             elif heading is None:
                 status = "Plug in the sensor stick for auto trim"
-        elif message:
-            status, status_pen = message, ACCENT if message_good else ALERT
     if status:
         screen.font = BODY_FONT
         screen.pen = status_pen
         screen.text(status, rect(12, 208, 296, 32) if stage == STRAIGHT or phase == RUNNING else rect(12, 128, 296, 44), 17, align=(image.CENTER, image.MIDDLE))
 
-    labels.draw(screen, TITLE_FONT, actions)
+    labels.draw(screen, TITLE_FONT, actions, highlight)
 
     explorer.update()
