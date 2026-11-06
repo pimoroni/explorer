@@ -53,6 +53,7 @@ WIRING = (
 )
 
 wiring.show(WIRING, TITLE_FONT, BODY_FONT)
+explorer.rotate(True)
 robot = Robot(explorer)
 ltr = explorer.sensor(proximity_sensor, TITLE_FONT, on_disconnect=robot.stop)
 imu = explorer.sensor(LSM6DS3, TITLE_FONT, on_disconnect=robot.stop)

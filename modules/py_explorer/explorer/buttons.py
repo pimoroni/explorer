@@ -5,7 +5,8 @@ import machine
 class Button:
     def __init__(self, name, pin_name):
         self.name = name
-        self.pin = getattr(machine.Pin.board, pin_name)
+        self.home_pin = getattr(machine.Pin.board, pin_name)
+        self.pin = self.home_pin
 
     @property
     def held(self):
@@ -38,6 +39,16 @@ BACK = button_b
 UP = button_x
 DOWN = button_y
 HOME = button_user
+
+OPPOSITES = ((button_a, button_z), (button_b, button_y), (button_c, button_x))
+
+
+def rotate_buttons(upside_down):
+    for button, opposite in OPPOSITES:
+        if upside_down:
+            button.pin, opposite.pin = opposite.home_pin, button.home_pin
+        else:
+            button.pin, opposite.pin = button.home_pin, opposite.home_pin
 
 
 def _matching(pins):

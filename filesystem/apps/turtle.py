@@ -54,6 +54,7 @@ WIRING = (
 )
 
 wiring.show(WIRING, TITLE_FONT, BODY_FONT)
+explorer.rotate(True)
 
 robot = Robot(explorer)
 heading = None

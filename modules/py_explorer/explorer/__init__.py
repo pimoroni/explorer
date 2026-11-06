@@ -25,6 +25,7 @@ from .buttons import (  # noqa: F401
     held,
     pressed,
     released,
+    rotate_buttons,
 )
 from .io import (  # noqa: F401
     ADC0,
@@ -62,6 +63,11 @@ screen.font = font.sins
 
 def backlight(level):
     display.backlight(min(1.0, max(0.0, level)))
+
+
+def rotate(upside_down):
+    display.set_rotate_180(upside_down)
+    rotate_buttons(upside_down)
 
 
 def poll():
